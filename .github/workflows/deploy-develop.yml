@@ -139,8 +139,6 @@ jobs:
           BUILD_END=$(date +%s)
           BUILD_DURATION=$((BUILD_END - BUILD_START))
           echo "⏱️ 构建耗时: ${BUILD_DURATION}秒"
-        env:
-          NODE_ENV: production
 
       - name: Verify build output
         run: |
