@@ -7,6 +7,16 @@ export const handleLogin = (data) => {
     data
   })
 }
+
+export const handleAnonymousLogin = () => {
+  return request<{username: string, token: string}>({
+    url: '/api/user/anonymous-login',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+}
 export const getReqId = () => {
   return request<{req_id: string}>({
     url: "/chat/req-id",

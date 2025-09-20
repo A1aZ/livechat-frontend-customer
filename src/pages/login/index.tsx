@@ -1,73 +1,74 @@
 import React from 'react'
-import {Button, Input, View} from "@tarojs/components";
+import {Button, View} from "@tarojs/components";
 import Taro from "@tarojs/taro"
 import {setToken} from "@/util/auth";
-import {handleLogin} from "@/api";
+import {handleAnonymousLogin} from "@/api";
 
 
 const Index = () => {
 
-  const [username, setUsername] = React.useState('')
-  const [password, setPassword] = React.useState('')
+  const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState(false)
 
-  const login = React.useCallback(form => {
-    if (!form.username) {
-      Taro.showToast({
-        icon:"none",
-        title: "请输入账号"
-      })
-      return
-    }
-    if (!form.password) {
-      Taro.showToast({
-        icon:"none",
-        title: "请输入密码"
-      })
-      return
-    }
-    handleLogin(form).then(res => {
+  const anonymousLogin = React.useCallback(() => {
+    setLoading(true)
+    setError(false)
 
+    handleAnonymousLogin().then(res => {
+      console.log('用户名:', res.data.username);
+      console.log('JWT令牌:', res.data.token);
+
+      // 保存token到本地存储
       setToken(res.data.token)
+
+      // 跳转到聊天页面
       Taro.navigateTo({
         url: '/pages/index/index'
       })
     }).catch((err) => {
-      if (err.success === false) {
-        Taro.showToast({
-          title: err.message,
-          duration: 3
-        })
-      }
+      console.error('匿名登录失败:', err);
+      setLoading(false)
+      setError(true)
+      Taro.showToast({
+        icon: 'none',
+        title: '登录失败，请重试',
+        duration: 3
+      })
     })
   }, [])
+
+  // 组件挂载时自动执行匿名登录
+  React.useEffect(() => {
+    anonymousLogin()
+  }, [anonymousLogin])
 
   return (
     <View className='pt-36'>
       <View className='text-center mb-10'>
         客服系统用户端
       </View>
-      <div className={"flex items-center flex-col px-[30px]"} style={{border: "20px", borderColor: "black"}}>
-        <View className={"mt-2 border-b border-gray-500 w-full"}>
-          <Input
-            placeholder={"请输入账号"}
-            name='username' value={username} type='text'
-            onInput={e => {
-              setUsername(e.detail.value)
-            }}
-          />
-        </View>
-        <View className={"border-b border-gray-500 mt-4 w-full"} style={{border: "1px"}}>
-          <Input name='password' value={password}
-                 placeholder={"请输入密码"}
-                 onInput={e => setPassword(e.detail.value)}
-          />
-        </View>
-        <Button type='primary' className={"mt-4"}  formType='submit'  onClick={() => login({
-          username, password
-        })}
-        >登录</Button>
-      </div>
+      <View className={"flex items-center flex-col px-[30px]"}>
+        {loading && (
+          <View className={"text-center"}>
+            <View className={"text-gray-600 mb-4"}>正在连接服务器...</View>
+            <View className={"animate-pulse text-blue-500"}>
+              <View className={"w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto"}></View>
+            </View>
+          </View>
+        )}
 
+        {error && (
+          <View className={"text-center"}>
+            <View className={"text-red-500 mb-4"}>连接失败</View>
+            <Button
+              className={"bg-blue-500 text-white px-6 py-2 rounded"}
+              onClick={anonymousLogin}
+            >
+              重试连接
+            </Button>
+          </View>
+        )}
+      </View>
     </View>
   )
 }
