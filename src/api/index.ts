@@ -10,9 +10,9 @@ export const handleLogin = (data) => {
 
 export const handleAnonymousLogin = () => {
   return request<{username: string, token: string}>({
-    url: '/api/user/anonymous-login',
+    url: '/anonymous-login',
     method: 'POST',
-    headers: {
+    header: {
       'Content-Type': 'application/json'
     }
   })
