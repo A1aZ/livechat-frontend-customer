@@ -4,7 +4,7 @@ name: Deploy Customer Frontend to Test Environment
 # 触发条件：
 # - develop 分支的 push 事件
 # - develop 分支的 pull request 事件
-# 构建环境：预发布环境 (pre)
+# 构建环境：预发布环境 (prod) 生产环境(临时使用)
 # 部署目标：测试服务器
 
 on:
@@ -15,7 +15,7 @@ on:
 
 env:
   # 构建环境配置
-  BUILD_MODE: pre
+  BUILD_MODE: prod
   API_BASE_URL: https://chat.lut.icu/api
 
 jobs:
@@ -140,7 +140,7 @@ jobs:
           BUILD_DURATION=$((BUILD_END - BUILD_START))
           echo "⏱️ 构建耗时: ${BUILD_DURATION}秒"
         env:
-          NODE_ENV: ${{ env.BUILD_MODE }}
+          NODE_ENV: production
 
       - name: Verify build output
         run: |
