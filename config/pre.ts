@@ -5,5 +5,7 @@ export default {
     WS_URL: '"ws://chat.lut.icu/api/user/chat/ws"'
   },
   mini: {},
-  h5: {},
+  h5: {
+    publicPath: '/customer/',
+  },
 } satisfies UserConfigExport<'webpack5'>
