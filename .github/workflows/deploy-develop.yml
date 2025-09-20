@@ -258,13 +258,13 @@ jobs:
         run: |
           echo "📢 发送部署通知..."
           DEPLOY_INFO="🚀 客服前端部署完成
-📅 时间: $(date)
-🏷️ 版本: ${{ github.sha }}
-🌐 环境: ${{ env.BUILD_MODE }}
-📋 访问: https://chat.lut.icu/customer
-🔗 API: ${{ env.API_BASE_URL }}
-📊 构建产物大小: $(du -sh /var/www/livechat-frontend-customer | cut -f1)
-✅ 状态: 部署成功"
+          📅 时间: $(date)
+          🏷️ 版本: ${{ github.sha }}
+          🌐 环境: ${{ env.BUILD_MODE }}
+          📋 访问: https://chat.lut.icu/customer
+          🔗 API: ${{ env.API_BASE_URL }}
+          📊 构建产物大小: $(du -sh /var/www/livechat-frontend-customer | cut -f1)
+          ✅ 状态: 部署成功"
 
           echo "$DEPLOY_INFO"
           # 这里可以集成其他通知服务，如 Slack、钉钉等
