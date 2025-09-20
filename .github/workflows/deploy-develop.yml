@@ -1,5 +1,12 @@
 name: Deploy Customer Frontend to Test Environment
 
+# 客服前端自动部署工作流
+# 触发条件：
+# - develop 分支的 push 事件
+# - develop 分支的 pull request 事件
+# 构建环境：预发布环境 (pre)
+# 部署目标：测试服务器
+
 on:
   push:
     branches: [develop]
@@ -7,10 +14,9 @@ on:
     branches: [develop]
 
 env:
-  # 设置环境变量
-  REACT_APP_ENV: test
-  REACT_APP_API_URL: https://chat.lut.icu/api
-  NODE_ENV: pre
+  # 构建环境配置
+  BUILD_MODE: pre
+  API_BASE_URL: https://chat.lut.icu/api
 
 jobs:
   test:
@@ -25,20 +31,50 @@ jobs:
           node-version: '18'
           cache: 'yarn'
 
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            ${{ github.workspace }}/.yarn/cache
+            ${{ github.workspace }}/.yarn/install-state.gz
+          key: ${{ runner.os }}-yarn-test-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-test-
+
       - name: Install dependencies
         run: |
           echo "📦 安装依赖..."
           yarn install --frozen-lockfile
+          echo "✅ 依赖安装完成"
+
+      - name: Check configuration files
+        run: |
+          echo "🔍 检查配置文件..."
+          if [ -f "config/${{ env.BUILD_MODE }}.ts" ]; then
+            echo "✅ 配置文件 config/${{ env.BUILD_MODE }}.ts 存在"
+          else
+            echo "❌ 配置文件 config/${{ env.BUILD_MODE }}.ts 不存在"
+            exit 1
+          fi
 
       - name: Run linting
         run: |
           echo "🔍 运行代码检查..."
-          yarn lint 2>/dev/null || echo "No lint script found, skipping..."
+          if yarn lint 2>/dev/null; then
+            echo "✅ 代码检查通过"
+          else
+            echo "⚠️ 代码检查失败，但继续构建..."
+          fi
 
       - name: Run tests
         run: |
           echo "🧪 运行测试..."
-          yarn test --watchAll=false --passWithNoTests 2>/dev/null || echo "No test script found, skipping..."
+          if yarn test --watchAll=false --passWithNoTests 2>/dev/null; then
+            echo "✅ 测试通过"
+          else
+            echo "⚠️ 测试失败，但继续构建..."
+          fi
 
   build:
     runs-on: ubuntu-latest
@@ -56,6 +92,27 @@ jobs:
           node-version: '18'
           cache: 'yarn'
 
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            ${{ github.workspace }}/.yarn/cache
+            ${{ github.workspace }}/.yarn/install-state.gz
+            ${{ github.workspace }}/node_modules
+          key: ${{ runner.os }}-yarn-build-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-build-
+
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/dist
+          key: ${{ runner.os }}-build-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
       - name: Install dependencies
         run: |
           echo "📦 安装依赖..."
@@ -69,13 +126,52 @@ jobs:
       - name: Build H5 application
         run: |
           echo "🏗️ 构建H5应用..."
-          echo "环境配置: 使用 config/pre.ts"
-          echo "API URL: ${{ env.REACT_APP_API_URL }}"
-          yarn build:h5
+          echo "构建模式: ${{ env.BUILD_MODE }}"
+          echo "API URL: ${{ env.API_BASE_URL }}"
+          echo "使用配置文件: config/${{ env.BUILD_MODE }}.ts"
+
+          # 开始构建计时
+          BUILD_START=$(date +%s)
+
+          yarn build:h5 --mode ${{ env.BUILD_MODE }}
+
+          # 计算构建时间
+          BUILD_END=$(date +%s)
+          BUILD_DURATION=$((BUILD_END - BUILD_START))
+          echo "⏱️ 构建耗时: ${BUILD_DURATION}秒"
         env:
-          REACT_APP_ENV: ${{ env.REACT_APP_ENV }}
-          REACT_APP_API_URL: ${{ env.REACT_APP_API_URL }}
-          NODE_ENV: pre
+          NODE_ENV: production
+
+      - name: Verify build output
+        run: |
+          echo "🔍 验证构建产物..."
+          if [ -f "dist/index.html" ]; then
+            echo "✅ index.html 存在"
+          else
+            echo "❌ index.html 不存在"
+            exit 1
+          fi
+
+          if [ -d "dist/js" ] && [ "$(ls -A dist/js/*.js 2>/dev/null | wc -l)" -gt 0 ]; then
+            echo "✅ JS文件存在"
+            echo "📊 JS文件数量: $(ls -A dist/js/*.js 2>/dev/null | wc -l)"
+          else
+            echo "❌ JS文件不存在"
+            exit 1
+          fi
+
+          if [ -d "dist/css" ] && [ "$(ls -A dist/css/*.css 2>/dev/null | wc -l)" -gt 0 ]; then
+            echo "✅ CSS文件存在"
+            echo "📊 CSS文件数量: $(ls -A dist/css/*.css 2>/dev/null | wc -l)"
+          else
+            echo "❌ CSS文件不存在"
+            exit 1
+          fi
+
+          # 显示构建产物大小
+          echo "📏 构建产物大小统计:"
+          du -sh dist/*
+          echo "✅ 构建验证通过"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -156,4 +252,19 @@ jobs:
             echo "🕒 完成时间: $(date)"
             echo ""
             echo "📋 访问地址: https://chat.lut.icu/customer"
-            echo "🔗 API地址: ${{ env.REACT_APP_API_URL }}"
+            echo "🔗 API地址: ${{ env.API_BASE_URL }}"
+
+      - name: Send deployment notification
+        run: |
+          echo "📢 发送部署通知..."
+          DEPLOY_INFO="🚀 客服前端部署完成
+📅 时间: $(date)
+🏷️ 版本: ${{ github.sha }}
+🌐 环境: ${{ env.BUILD_MODE }}
+📋 访问: https://chat.lut.icu/customer
+🔗 API: ${{ env.API_BASE_URL }}
+📊 构建产物大小: $(du -sh /var/www/livechat-frontend-customer | cut -f1)
+✅ 状态: 部署成功"
+
+          echo "$DEPLOY_INFO"
+          # 这里可以集成其他通知服务，如 Slack、钉钉等
