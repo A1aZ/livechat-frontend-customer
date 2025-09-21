@@ -26,6 +26,17 @@ const Index = () => {
 
   const action = React.useContext(context)
 
+  // 调试信息
+  React.useEffect(() => {
+    console.log('🎯 Input组件状态:', {
+      ai_block_user_messages: action.ai_block_user_messages,
+      aiBlocked: action.aiBlocked,
+      isWaitingForAgent: action.isWaitingForAgent,
+      isConnectedToAgent: action.isConnectedToAgent,
+      shouldShowAiBlock: action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent
+    })
+  }, [action.ai_block_user_messages, action.aiBlocked, action.isWaitingForAgent, action.isConnectedToAgent])
+
 
   const selectImg = React.useCallback(() => {
     Taro.chooseImage({}).then(res => {
@@ -60,9 +71,16 @@ const Index = () => {
         setValue('')
 
         // 根据后端设置决定是否启用AI阻塞
-        // 如果后端启用了AI阻塞，且当前不在排队状态，前端立即进入阻塞状态
-        if (action.ai_block_user_messages && !(action.waitingCount && action.waitingCount > 0)) {
+        // 如果后端启用了AI阻塞，且当前不在等待人工客服状态且未连接到人工客服，前端立即进入阻塞状态
+        console.log('📤 发送消息状态检查:', {
+          ai_block_user_messages: action.ai_block_user_messages,
+          isWaitingForAgent: action.isWaitingForAgent,
+          isConnectedToAgent: action.isConnectedToAgent,
+          willBlock: action.ai_block_user_messages && !action.isWaitingForAgent && !action.isConnectedToAgent
+        })
+        if (action.ai_block_user_messages && !action.isWaitingForAgent && !action.isConnectedToAgent) {
           action.setAiBlocked && action.setAiBlocked(true)
+          console.log('🚫 设置AI阻塞: true')
         }
       }
     } catch (error: any) {
@@ -91,20 +109,20 @@ const Index = () => {
       <View className={"w-[83%] p-2 text-xl"}>
         <Input cursorSpacing={20}
           value={value}
-          disabled={isSending || (action.aiBlocked && !(action.waitingCount && action.waitingCount > 0))}
+          disabled={isSending || (action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent)}
           placeholder={
-            action.ai_block_user_messages && action.aiBlocked && !(action.waitingCount && action.waitingCount > 0)
+            action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent
               ? "AI正在回复中，请稍等..."
               : "请输入消息..."
           }
           className={classNames("bg-white p-1 rounded transition-all", {
-            "opacity-50": isSending || (action.aiBlocked && !(action.waitingCount && action.waitingCount > 0)),
-            "bg-gray-100": action.ai_block_user_messages && action.aiBlocked && !(action.waitingCount && action.waitingCount > 0)
+            "opacity-50": isSending || (action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent),
+            "bg-gray-100": action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent
           })}
           onInput={e => setValue(e.detail.value)}
           confirmHold
           onConfirm={e => {
-            if (e.detail.value.length > 0 && !isSending && !(action.ai_block_user_messages && action.aiBlocked && !(action.waitingCount && action.waitingCount > 0))) {
+            if (e.detail.value.length > 0 && !isSending && !(action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent)) {
               handleSend(e.detail.value)
             }
           }}
@@ -114,11 +132,11 @@ const Index = () => {
         <Image
           src={PictureImg}
           className={classNames("w-8 h-auto flex transition-all", {
-            "opacity-50": isSending || (action.ai_block_user_messages && action.aiBlocked && !(action.waitingCount && action.waitingCount > 0))
+            "opacity-50": isSending || (action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent)
           })}
           mode='widthFix'
           onClick={() => {
-            if (!isSending && !(action.ai_block_user_messages && action.aiBlocked && !(action.waitingCount && action.waitingCount > 0))) {
+            if (!isSending && !(action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent)) {
               selectImg()
             }
           }}
@@ -128,7 +146,7 @@ const Index = () => {
             发送中...
           </View>
         )}
-        {action.ai_block_user_messages && action.aiBlocked && !(action.waitingCount && action.waitingCount > 0) && (
+        {action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent && (
           <View className="ml-2 text-xs text-orange-500 flex items-center">
             AI思考中
           </View>

@@ -7,6 +7,8 @@ const context = React.createContext<{
   ai_block_user_messages?: boolean,
   aiBlocked?: boolean,
   waitingCount?: number,
+  isWaitingForAgent?: boolean,
+  isConnectedToAgent?: boolean,
   setAiBlocked?: (blocked: boolean) => void
 }>({
   send: undefined,
@@ -15,6 +17,8 @@ const context = React.createContext<{
   ai_block_user_messages: false,
   aiBlocked: false,
   waitingCount: 0,
+  isWaitingForAgent: false,
+  isConnectedToAgent: false,
   setAiBlocked: undefined
 })
 
