@@ -10,18 +10,19 @@ import Audio from './components/Audio'
 import Video from './components/Video'
 import Pdf from './components/Pdf'
 import classNames from "classnames";
+import {MessageSource} from "@/util/index";
 
 const Index: React.FC<{
   message: APP.Message
   showRead?: boolean
 }> = ({showRead, message}) => {
   let item : React.ReactNode = <></>
-  const CusAvatar = message.source !== 0 && message.avatar ?
+  const CusAvatar = !MessageSource.isUser(message.source) && message.avatar ?
     <Image src={message.avatar} className={"w-8  h-8 rounded self-start"} />
     : <Avatar />
 
 
-  const direction = message.source === 0 ? "right" : "left";
+  const direction = MessageSource.isUser(message.source) ? "right" : "left";
 
   const name =  direction === "left" ? <View className={"text-xs text-gray-500"}>{message.admin_name}</View> : <></>
 

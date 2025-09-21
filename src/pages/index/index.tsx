@@ -4,6 +4,7 @@ import {View} from '@tarojs/components'
 import {getMessages, getSetting, handleRead} from "@/api";
 import {getToken} from "@/util/auth";
 import {isH5, isWeapp} from "@/util/env";
+import {MessageSource} from "@/util/index";
 
 import SendContext from './context'
 import Input from './components/Input'
@@ -26,6 +27,13 @@ const Index = () => {
   const [waitingCount, setWaitingCount] = React.useState<number>(0)
 
   const [setting, setSetting] = React.useState<APP.ChatSetting>()
+
+  const [aiBlocked, setAiBlocked] = React.useState<boolean>(false)
+
+  // 暴露AI阻塞状态管理方法
+  const handleSetAiBlocked = React.useCallback((blocked: boolean) => {
+    setAiBlocked(blocked)
+  }, [])
 
   React.useEffect(() => {
     getSetting().then(r => {
@@ -64,6 +72,10 @@ const Index = () => {
                 })
                 if (msg.admin_id > 0) { // 说明已被接入
                   setWaitingCount(0)
+                }
+                // 如果收到AI消息，解除阻塞状态
+                if (MessageSource.isAi(msg.source)) {
+                  setAiBlocked(false)
                 }
                 setToTop(prevState => !prevState)
                 break
@@ -140,10 +152,24 @@ const Index = () => {
             resolve(true)
           },
           fail: res => {
-            Taro.showToast({
-              icon: 'none',
-              title: res.errMsg
-            })
+            // 检查是否是AI阻塞错误
+            if (res.errMsg && res.errMsg.includes('AI正在回复中')) {
+              setAiBlocked(true)
+              Taro.showToast({
+                title: 'AI正在思考中，请稍等...',
+                icon: 'none',
+                duration: 2000
+              })
+              // 3秒后自动解除阻塞状态（作为fallback）
+              setTimeout(() => {
+                setAiBlocked(false)
+              }, 3000)
+            } else {
+              Taro.showToast({
+                icon: 'none',
+                title: res.errMsg
+              })
+            }
             reject(res.errMsg)
           }
         })
@@ -244,6 +270,8 @@ const Index = () => {
   return (
     <SendContext.Provider value={{
       send,
+      setAiBlocked: handleSetAiBlocked,
+      aiBlocked,
       ...setting
     }}>
       {
