@@ -51,6 +51,7 @@ declare namespace APP {
 
   export type ChatSetting = {
     is_show_queue: boolean,
-    is_show_read: boolean
+    is_show_read: boolean,
+    ai_block_user_messages?: boolean
   }
 }

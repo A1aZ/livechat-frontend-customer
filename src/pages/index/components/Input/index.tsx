@@ -50,7 +50,7 @@ const Index = () => {
   }, [action.send])
 
   const handleSend = React.useCallback(async (message: string) => {
-    if (!message.trim() || isSending || action.aiBlocked) return
+    if (!message.trim() || isSending) return
 
     setIsSending(true)
     try {
@@ -58,9 +58,15 @@ const Index = () => {
       if (action.send) {
         await action.send(act)
         setValue('')
+
+        // 根据后端设置决定是否启用AI阻塞
+        // 如果后端启用了AI阻塞，前端立即进入阻塞状态
+        if (action.ai_block_user_messages) {
+          action.setAiBlocked && action.setAiBlocked(true)
+        }
       }
     } catch (error: any) {
-      // 检查是否是AI阻塞错误
+      // 如果后端也返回阻塞错误，显示提示
       if (error && typeof error === 'string' && error.includes('AI正在回复中')) {
         action.setAiBlocked && action.setAiBlocked(true)
         Taro.showToast({
@@ -76,7 +82,7 @@ const Index = () => {
     } finally {
       setIsSending(false)
     }
-  }, [action.send, action.setAiBlocked, action.aiBlocked, isSending])
+  }, [action.send, action.setAiBlocked, action.ai_block_user_messages, isSending])
 
   return (
     <View className={classNames(`border-t border-solid flex flex-shrink-0 items-center bg-[#F5F6F7]`, {
@@ -86,15 +92,19 @@ const Index = () => {
         <Input cursorSpacing={20}
           value={value}
           disabled={isSending || action.aiBlocked}
-          placeholder={action.aiBlocked ? "AI正在回复中，请稍等..." : "请输入消息..."}
+          placeholder={
+            action.ai_block_user_messages && action.aiBlocked
+              ? "AI正在回复中，请稍等..."
+              : "请输入消息..."
+          }
           className={classNames("bg-white p-1 rounded transition-all", {
             "opacity-50": isSending || action.aiBlocked,
-            "bg-gray-100": action.aiBlocked
+            "bg-gray-100": action.ai_block_user_messages && action.aiBlocked
           })}
           onInput={e => setValue(e.detail.value)}
           confirmHold
           onConfirm={e => {
-            if (e.detail.value.length > 0 && !isSending && !action.aiBlocked) {
+            if (e.detail.value.length > 0 && !isSending && !(action.ai_block_user_messages && action.aiBlocked)) {
               handleSend(e.detail.value)
             }
           }}
@@ -104,11 +114,11 @@ const Index = () => {
         <Image
           src={PictureImg}
           className={classNames("w-8 h-auto flex transition-all", {
-            "opacity-50": isSending || action.aiBlocked
+            "opacity-50": isSending || (action.ai_block_user_messages && action.aiBlocked)
           })}
           mode='widthFix'
           onClick={() => {
-            if (!isSending && !action.aiBlocked) {
+            if (!isSending && !(action.ai_block_user_messages && action.aiBlocked)) {
               selectImg()
             }
           }}
@@ -118,7 +128,7 @@ const Index = () => {
             发送中...
           </View>
         )}
-        {action.aiBlocked && (
+        {action.ai_block_user_messages && action.aiBlocked && (
           <View className="ml-2 text-xs text-orange-500 flex items-center">
             AI思考中
           </View>

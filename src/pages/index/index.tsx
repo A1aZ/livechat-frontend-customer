@@ -272,6 +272,7 @@ const Index = () => {
       send,
       setAiBlocked: handleSetAiBlocked,
       aiBlocked,
+      ai_block_user_messages: setting?.ai_block_user_messages,
       ...setting
     }}>
       {
