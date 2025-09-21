@@ -110,6 +110,8 @@ const Index = () => {
               case "waiting-user-count": {
                 const count = action.data
                 setWaitingCount(count)
+                // 收到等待人数消息时，清除AI阻塞状态，因为用户正在等待人工客服
+                setAiBlocked(false)
                 break
               }
             }
