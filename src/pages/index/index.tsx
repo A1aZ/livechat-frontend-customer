@@ -72,6 +72,7 @@ const Index = () => {
                 })
                 if (msg.admin_id > 0) { // 说明已被接入
                   setWaitingCount(0)
+                  setAiBlocked(false) // 转接人工时也要清除AI阻塞状态
                 }
                 // 如果收到AI消息，解除阻塞状态
                 if (MessageSource.isAi(msg.source)) {
@@ -272,6 +273,7 @@ const Index = () => {
       send,
       setAiBlocked: handleSetAiBlocked,
       aiBlocked,
+      waitingCount,
       ai_block_user_messages: setting?.ai_block_user_messages,
       ...setting
     }}>

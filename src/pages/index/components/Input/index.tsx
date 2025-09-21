@@ -60,8 +60,8 @@ const Index = () => {
         setValue('')
 
         // 根据后端设置决定是否启用AI阻塞
-        // 如果后端启用了AI阻塞，前端立即进入阻塞状态
-        if (action.ai_block_user_messages) {
+        // 如果后端启用了AI阻塞，且当前不在排队状态，前端立即进入阻塞状态
+        if (action.ai_block_user_messages && !(action.waitingCount && action.waitingCount > 0)) {
           action.setAiBlocked && action.setAiBlocked(true)
         }
       }
@@ -91,20 +91,20 @@ const Index = () => {
       <View className={"w-[83%] p-2 text-xl"}>
         <Input cursorSpacing={20}
           value={value}
-          disabled={isSending || action.aiBlocked}
+          disabled={isSending || (action.aiBlocked && !(action.waitingCount && action.waitingCount > 0))}
           placeholder={
-            action.ai_block_user_messages && action.aiBlocked
+            action.ai_block_user_messages && action.aiBlocked && !(action.waitingCount && action.waitingCount > 0)
               ? "AI正在回复中，请稍等..."
               : "请输入消息..."
           }
           className={classNames("bg-white p-1 rounded transition-all", {
-            "opacity-50": isSending || action.aiBlocked,
-            "bg-gray-100": action.ai_block_user_messages && action.aiBlocked
+            "opacity-50": isSending || (action.aiBlocked && !(action.waitingCount && action.waitingCount > 0)),
+            "bg-gray-100": action.ai_block_user_messages && action.aiBlocked && !(action.waitingCount && action.waitingCount > 0)
           })}
           onInput={e => setValue(e.detail.value)}
           confirmHold
           onConfirm={e => {
-            if (e.detail.value.length > 0 && !isSending && !(action.ai_block_user_messages && action.aiBlocked)) {
+            if (e.detail.value.length > 0 && !isSending && !(action.ai_block_user_messages && action.aiBlocked && !(action.waitingCount && action.waitingCount > 0))) {
               handleSend(e.detail.value)
             }
           }}
@@ -114,11 +114,11 @@ const Index = () => {
         <Image
           src={PictureImg}
           className={classNames("w-8 h-auto flex transition-all", {
-            "opacity-50": isSending || (action.ai_block_user_messages && action.aiBlocked)
+            "opacity-50": isSending || (action.ai_block_user_messages && action.aiBlocked && !(action.waitingCount && action.waitingCount > 0))
           })}
           mode='widthFix'
           onClick={() => {
-            if (!isSending && !(action.ai_block_user_messages && action.aiBlocked)) {
+            if (!isSending && !(action.ai_block_user_messages && action.aiBlocked && !(action.waitingCount && action.waitingCount > 0))) {
               selectImg()
             }
           }}
@@ -128,7 +128,7 @@ const Index = () => {
             发送中...
           </View>
         )}
-        {action.ai_block_user_messages && action.aiBlocked && (
+        {action.ai_block_user_messages && action.aiBlocked && !(action.waitingCount && action.waitingCount > 0) && (
           <View className="ml-2 text-xs text-orange-500 flex items-center">
             AI思考中
           </View>

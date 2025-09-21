@@ -6,6 +6,7 @@ const context = React.createContext<{
   is_show_read?: boolean,
   ai_block_user_messages?: boolean,
   aiBlocked?: boolean,
+  waitingCount?: number,
   setAiBlocked?: (blocked: boolean) => void
 }>({
   send: undefined,
@@ -13,6 +14,7 @@ const context = React.createContext<{
   is_show_read: false,
   ai_block_user_messages: false,
   aiBlocked: false,
+  waitingCount: 0,
   setAiBlocked: undefined
 })
 
