@@ -82,14 +82,14 @@ const Index = () => {
       <View className={"w-[83%] p-2 text-xl"}>
         <Input cursorSpacing={20}
           value={value}
-          disabled={isSending || (action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent)}
+          disabled={isSending || (action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent)}
           placeholder={
             action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent
               ? "AI正在回复中，请稍等..."
               : "请输入消息..."
           }
           className={classNames("bg-white p-1 rounded transition-all", {
-            "opacity-50": isSending || (action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent),
+            "opacity-50": isSending || (action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent),
             "bg-gray-100": action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent
           })}
           onInput={e => setValue(e.detail.value)}
