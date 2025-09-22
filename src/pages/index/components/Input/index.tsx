@@ -69,34 +69,18 @@ const Index = () => {
       if (action.send) {
         await action.send(act)
         setValue('')
-
-        // 根据后端设置决定是否启用AI阻塞
-        // 如果后端启用了AI阻塞，且当前不在等待人工客服状态且未连接到人工客服，前端立即进入阻塞状态
-        console.log('📤 发送消息状态检查:', {
-          ai_block_user_messages: action.ai_block_user_messages,
-          isWaitingForAgent: action.isWaitingForAgent,
-          isConnectedToAgent: action.isConnectedToAgent,
-          willBlock: action.ai_block_user_messages && !action.isWaitingForAgent && !action.isConnectedToAgent
-        })
-        if (action.ai_block_user_messages && !action.isWaitingForAgent && !action.isConnectedToAgent) {
-          action.setAiBlocked && action.setAiBlocked(true)
-          console.log('🚫 设置AI阻塞: true')
-        }
+        // 不再预判阻塞，等待后端发送明确的阻塞信号
+        console.log('📤 发送消息完成，等待后端信号')
       }
     } catch (error: any) {
-      // 如果后端也返回阻塞错误，显示提示
-      if (error && typeof error === 'string' && error.includes('AI正在回复中')) {
-        action.setAiBlocked && action.setAiBlocked(true)
+      // 处理其他错误（阻塞相关的错误现在由信号处理）
+      if (error && typeof error === 'string' && !error.includes('AI正在回复中')) {
         Taro.showToast({
-          title: 'AI正在思考中，请稍等...',
           icon: 'none',
-          duration: 2000
+          title: error
         })
-        // 3秒后自动解除阻塞状态（作为fallback）
-        setTimeout(() => {
-          action.setAiBlocked && action.setAiBlocked(false)
-        }, 3000)
       }
+      throw error
     } finally {
       setIsSending(false)
     }

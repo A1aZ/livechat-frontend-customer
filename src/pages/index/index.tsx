@@ -133,6 +133,18 @@ const Index = () => {
                 console.log('🔧 状态更新: isWaitingForAgent=true, aiBlocked=false')
                 break
               }
+              case "ai-block": {
+                console.log('🔧 收到AI阻塞信号')
+                setAiBlocked(true)
+                console.log('🔧 设置AI阻塞: true')
+                break
+              }
+              case "ai-unblock": {
+                console.log('🔧 收到AI解除阻塞信号')
+                setAiBlocked(false)
+                console.log('🔧 解除AI阻塞: false')
+                break
+              }
             }
           }catch (e) {
 
