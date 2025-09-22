@@ -26,16 +26,6 @@ const Index = () => {
 
   const action = React.useContext(context)
 
-  // 调试信息
-  React.useEffect(() => {
-    console.log('🎯 Input组件状态:', {
-      ai_block_user_messages: action.ai_block_user_messages,
-      aiBlocked: action.aiBlocked,
-      isWaitingForAgent: action.isWaitingForAgent,
-      isConnectedToAgent: action.isConnectedToAgent,
-      shouldShowAiBlock: action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent
-    })
-  }, [action.ai_block_user_messages, action.aiBlocked, action.isWaitingForAgent, action.isConnectedToAgent])
 
 
   const selectImg = React.useCallback(() => {
@@ -70,7 +60,6 @@ const Index = () => {
         await action.send(act)
         setValue('')
         // 不再预判阻塞，等待后端发送明确的阻塞信号
-        console.log('📤 发送消息完成，等待后端信号')
       }
     } catch (error: any) {
       // 处理其他错误（阻塞相关的错误现在由信号处理）

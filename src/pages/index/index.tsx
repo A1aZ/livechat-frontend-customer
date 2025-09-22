@@ -68,14 +68,6 @@ const Index = () => {
             switch (action.action) {
               case 'receive-message': {
                 const msg = action.data as APP.Message
-                console.log('📨 收到消息:', {
-                  id: msg.id,
-                  content: msg.content,
-                  admin_id: msg.admin_id,
-                  admin_name: msg.admin_name,
-                  source: msg.source,
-                  type: msg.type
-                })
                 if (msg.id) {
                   handleRead(msg.id).then().catch()
                 }
@@ -83,12 +75,10 @@ const Index = () => {
                   return [msg].concat(prev)
                 })
                 if (msg.admin_id > 0) { // 说明已被接入
-                  console.log('🔧 客服接入:', { admin_id: msg.admin_id, admin_name: msg.admin_name, source: msg.source })
                   setWaitingCount(0)
                   setIsWaitingForAgent(false) // 人工客服接手，结束等待状态
                   setIsConnectedToAgent(true) // 标记已连接到人工客服
                   setAiBlocked(false) // 转接人工时也要清除AI阻塞状态
-                  console.log('🔧 状态更新: isWaitingForAgent=false, isConnectedToAgent=true, aiBlocked=false')
                 }
                 // 如果收到AI消息，解除阻塞状态
                 if (MessageSource.isAi(msg.source)) {
@@ -125,24 +115,18 @@ const Index = () => {
               }
               case "waiting-user-count": {
                 const count = action.data
-                console.log('🔧 等待人数更新:', count)
                 setWaitingCount(count)
                 // 收到等待人数消息时，标记用户正在等待人工客服，并清除AI阻塞状态
                 setIsWaitingForAgent(true)
                 setAiBlocked(false)
-                console.log('🔧 状态更新: isWaitingForAgent=true, aiBlocked=false')
                 break
               }
               case "ai-block": {
-                console.log('🔧 收到AI阻塞信号')
                 setAiBlocked(true)
-                console.log('🔧 设置AI阻塞: true')
                 break
               }
               case "ai-unblock": {
-                console.log('🔧 收到AI解除阻塞信号')
                 setAiBlocked(false)
-                console.log('🔧 解除AI阻塞: false')
                 break
               }
             }
@@ -166,7 +150,6 @@ const Index = () => {
     setIsWaitingForAgent(false)
     setIsConnectedToAgent(false)
     setAiBlocked(false)
-    console.log('🔄 初始化聊天状态: isWaitingForAgent=false, isConnectedToAgent=false, aiBlocked=false')
     getMessages(pageSize,).then(res => {
       if (res.data.length < pageSize) {
         setNoMore(true)
