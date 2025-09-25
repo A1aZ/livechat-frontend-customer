@@ -37,6 +37,17 @@ const Index = () => {
 
   const [hasSentPageInfo, setHasSentPageInfo] = React.useState<boolean>(false)
 
+  // 计算当前客服状态
+  const serviceStatus = React.useMemo(() => {
+    if (isConnectedToAgent) {
+      return 'manual-serving' as const // 人工接待中
+    } else if (isWaitingForAgent) {
+      return 'transferring-to-manual' as const // 转接人工中
+    } else {
+      return 'ai-serving' as const // AI接待中
+    }
+  }, [isConnectedToAgent, isWaitingForAgent])
+
   // 暴露AI阻塞状态管理方法
   const handleSetAiBlocked = React.useCallback((blocked: boolean) => {
     setAiBlocked(blocked)
@@ -143,6 +154,20 @@ const Index = () => {
 
     sendPageInfoToAgent()
   }, [task, hasSentPageInfo])
+
+  // 获取状态显示文本
+  const getStatusText = React.useCallback(() => {
+    switch (serviceStatus) {
+      case 'ai-serving':
+        return aiBlocked ? 'AI思考中...' : 'AI接待中'
+      case 'transferring-to-manual':
+        return '转接人工中...'
+      case 'manual-serving':
+        return '人工接待中'
+      default:
+        return 'AI接待中'
+    }
+  }, [serviceStatus, aiBlocked])
 
   // 控制滚动条滚动到底部
   const [toTop, setToTop] = React.useState(false)
@@ -254,6 +279,11 @@ const Index = () => {
       })
       t.onClose(() => {
         setTask(undefined)
+        // WebSocket连接断开时重置相关状态
+        setIsWaitingForAgent(false)
+        setIsConnectedToAgent(false)
+        setAiBlocked(false)
+        setWaitingCount(0)
       })
       setTask(t)
     })
@@ -432,6 +462,7 @@ const Index = () => {
       isConnectedToAgent,
       ai_block_user_messages: setting?.ai_block_user_messages,
       transferToManual: handleTransferToManual,
+      serviceStatus,
       ...setting
     }}>
       {
