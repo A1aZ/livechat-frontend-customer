@@ -9,7 +9,8 @@ const context = React.createContext<{
   waitingCount?: number,
   isWaitingForAgent?: boolean,
   isConnectedToAgent?: boolean,
-  setAiBlocked?: (blocked: boolean) => void
+  setAiBlocked?: (blocked: boolean) => void,
+  transferToManual?: () => Promise<void>
 }>({
   send: undefined,
   is_show_queue: false,
@@ -19,7 +20,8 @@ const context = React.createContext<{
   waitingCount: 0,
   isWaitingForAgent: false,
   isConnectedToAgent: false,
-  setAiBlocked: undefined
+  setAiBlocked: undefined,
+  transferToManual: undefined
 })
 
 export default context

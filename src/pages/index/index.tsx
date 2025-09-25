@@ -1,7 +1,7 @@
 import React from 'react'
 import Taro from '@tarojs/taro'
 import {View} from '@tarojs/components'
-import {getMessages, getSetting, handleRead, clearMessages} from "@/api";
+import {getMessages, getSetting, handleRead, clearMessages, transferToManual} from "@/api";
 import {getToken} from "@/util/auth";
 import {isH5, isWeapp} from "@/util/env";
 import {MessageSource} from "@/util/index";
@@ -250,6 +250,23 @@ const Index = () => {
 
   const fetchLock = React.useRef(false)
 
+  const handleTransferToManual = React.useCallback(async () => {
+    try {
+      await transferToManual()
+      Taro.showToast({
+        title: '已转接人工客服',
+        icon: 'success'
+      })
+    } catch (error: any) {
+      const errorMsg = error?.message || '转接失败'
+      Taro.showToast({
+        title: errorMsg,
+        icon: 'error'
+      })
+      throw error
+    }
+  }, [])
+
   const getMoreMessage = React.useCallback(async () => {
     if (!fetchLock.current && !noMore) {
       fetchLock.current = true
@@ -298,6 +315,7 @@ const Index = () => {
       isWaitingForAgent,
       isConnectedToAgent,
       ai_block_user_messages: setting?.ai_block_user_messages,
+      transferToManual: handleTransferToManual,
       ...setting
     }}>
       {
@@ -310,7 +328,30 @@ const Index = () => {
       })} style={cusStyles}>
         <View className={"overflow-hidden flex w-full self-end"}>
           {/* 工具栏 */}
-          <View className={"flex justify-end px-2 py-1 bg-white border-b"}>
+          <View className={"flex justify-between px-2 py-1 bg-white border-b"}>
+            <View
+              className={`text-xs px-2 py-1 rounded border ${
+                action.isWaitingForAgent || action.isConnectedToAgent
+                  ? 'text-gray-300 border-gray-200'
+                  : 'text-blue-500 border-blue-300'
+              }`}
+              onClick={() => {
+                if (action.isWaitingForAgent || action.isConnectedToAgent) {
+                  return; // 已经在等待人工或已连接人工，不允许再次转人工
+                }
+                Taro.showModal({
+                  title: '提示',
+                  content: '确定要转接人工客服吗？',
+                  success: (res) => {
+                    if (res.confirm && action.transferToManual) {
+                      action.transferToManual().catch(() => {})
+                    }
+                  }
+                })
+              }}
+            >
+              {action.isConnectedToAgent ? '已连接人工' : action.isWaitingForAgent ? '等待人工中...' : '转人工'}
+            </View>
             <View
               className={"text-xs text-gray-500 px-2 py-1 rounded border"}
               onClick={() => {
