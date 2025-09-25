@@ -1,7 +1,7 @@
 import React from 'react'
 import Taro from '@tarojs/taro'
 import {View} from '@tarojs/components'
-import {getMessages, getSetting, handleRead, clearMessages, transferToManual} from "@/api";
+import {getMessages, getSetting, handleRead, clearMessages, transferToManual, getReqId} from "@/api";
 import {getToken} from "@/util/auth";
 import {isH5, isWeapp} from "@/util/env";
 import {loadScript, MessageSource} from "@/util/index";
@@ -35,6 +35,8 @@ const Index = () => {
 
   const [aiBlocked, setAiBlocked] = React.useState<boolean>(false)
 
+  const [hasSentPageInfo, setHasSentPageInfo] = React.useState<boolean>(false)
+
   // 暴露AI阻塞状态管理方法
   const handleSetAiBlocked = React.useCallback((blocked: boolean) => {
     setAiBlocked(blocked)
@@ -46,6 +48,89 @@ const Index = () => {
       setSetting(r.data)
     })
   }, [])
+
+  // 获取页面信息和自动发送消息
+  React.useEffect(() => {
+    const sendPageInfoToAgent = async () => {
+      try {
+        const instance = Taro.getCurrentInstance()
+        const params = instance.router?.params || {}
+
+        // 检查是否有auto_send参数（自动发送页面信息给客服）
+        if ((params.auto_send === '1' || params.auto_send === 'true') && !hasSentPageInfo) {
+          // 获取页面URL和标题
+          let pageUrl = ''
+          let pageTitle = ''
+
+          if (isH5()) {
+            pageUrl = window.location.href
+            pageTitle = document.title || '页面'
+          } else if (isWeapp()) {
+            // 小程序中构造URL
+            const pages = Taro.getCurrentPages()
+            const currentPage = pages[pages.length - 1]
+            if (currentPage) {
+              pageUrl = `/${currentPage.route}`
+              // 小程序中可以尝试从页面配置获取标题，或者使用默认值
+              pageTitle = currentPage.config?.navigationBarTitleText || '客服聊天页面'
+            }
+          }
+
+          // 如果有URL和标题，自动发送消息
+          if (pageUrl && pageTitle) {
+            const message = `页面信息\n标题：${pageTitle}\n链接：${pageUrl}`
+
+            // 等待WebSocket连接建立后发送消息
+            const sendMessageAfterConnect = () => {
+              if (task && task.readyState === 1) { // WebSocket.OPEN = 1
+                // 获取req_id
+                getReqId().then(res => {
+                  const action = {
+                    data: {
+                      admin_id: 0,
+                      content: message,
+                      type: 'page-info' as const,
+                      req_id: res.data.req_id,
+                      source: 0,
+                      avatar: '',
+                      received_at: Math.floor(Date.now() / 1000),
+                      success: undefined,
+                    },
+                    time: Math.floor(Date.now() / 1000),
+                    action: 'send-message',
+                  }
+                  // 对于自动发送的消息，直接通过WebSocket发送，不添加到本地消息列表
+                  if (task && task.readyState === 1) {
+                    task.send({
+                      data: JSON.stringify(action),
+                      success: () => {
+                        setHasSentPageInfo(true)
+                      },
+                      fail: (res) => {
+                        console.error('自动发送页面信息失败:', res.errMsg)
+                      }
+                    })
+                  }
+                }).catch(error => {
+                  console.error('获取req_id失败:', error)
+                })
+              } else {
+                // 如果连接还没建立，稍后再试
+                setTimeout(sendMessageAfterConnect, 500)
+              }
+            }
+
+            // 延迟执行，确保组件已完全初始化
+            setTimeout(sendMessageAfterConnect, 2000)
+          }
+        }
+      } catch (error) {
+        console.error('获取页面信息失败:', error)
+      }
+    }
+
+    sendPageInfoToAgent()
+  }, [task, hasSentPageInfo])
 
   // 控制滚动条滚动到底部
   const [toTop, setToTop] = React.useState(false)
