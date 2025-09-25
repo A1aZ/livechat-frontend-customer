@@ -67,3 +67,15 @@ export const transferToManual = () => {
     method: 'POST'
   })
 }
+
+export const getStatus = () => {
+  return request<{
+    is_waiting_for_agent: boolean,
+    is_connected_to_agent: boolean,
+    ai_blocked: boolean,
+    waiting_count: number
+  }>({
+    url: '/chat/status',
+    method: 'GET'
+  })
+}
