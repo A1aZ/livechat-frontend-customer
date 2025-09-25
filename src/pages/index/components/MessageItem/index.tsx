@@ -49,10 +49,10 @@ const Index: React.FC<{
       break
     default:
   }
-  return <View className={classNames("flex items-start mt-2", {
+  return <View className={classNames("flex items-start mb-2 mt-2", {
     "flex-row-reverse": direction === "right",
   })}>
-    <View className={"px-2 flex-shrink-0 self-start"}>
+    <View className={"flex px-2 flex-shrink-0 self-start"}>
       {CusAvatar}
     </View>
     <View className={classNames("flex max-w-[60%] overflow-hidden flex-col", {

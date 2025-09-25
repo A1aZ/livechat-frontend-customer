@@ -1,10 +1,11 @@
 import React from 'react'
 import Taro from '@tarojs/taro'
-import {View} from '@tarojs/components'
+import {View, PageMeta, NavigationBar} from '@tarojs/components'
 import {getMessages, getSetting, handleRead, clearMessages, transferToManual, getReqId, getStatus} from "@/api";
-import {getToken} from "@/util/auth";
+import {getToken} from "@/util/auth"
 import {isH5, isWeapp} from "@/util/env";
-import {loadScript, MessageSource} from "@/util/index";
+import {loadScript, MessageSource} from "@/util/index"
+import  styles from './index.module.less'
 
 import SendContext from './context'
 import Input from './components/Input'
@@ -442,6 +443,22 @@ const Index = () => {
     }
   }, [])
 
+  const connectService = () => {
+    // 只有在AI接待中且AI未阻塞时才能转人工
+    if (serviceStatus !== 'ai-serving' || aiBlocked) {
+      return;
+    }
+    Taro.showModal({
+      title: '提示',
+      content: '确定要转接人工客服吗？',
+      success: (res) => {
+        if (res.confirm) {
+          handleTransferToManual().catch(() => {})
+        }
+      }
+    })
+  }
+
   const getMoreMessage = React.useCallback(async () => {
     if (!fetchLock.current && !noMore) {
       fetchLock.current = true
@@ -481,6 +498,26 @@ const Index = () => {
     return {}
   }, [])
 
+  // 安全区样式
+  const [safeAreaStyle, setSafeAreaStyle] = React.useState({})
+  
+  React.useEffect(() => {
+    if (isH5()) {
+      // H5环境下使用CSS变量处理安全区
+      setSafeAreaStyle({
+        marginTop: 'env(safe-area-inset-top, 20px)'
+      })
+    }
+    if (isWeapp()) {
+      // 小程序环境下使用Taro的安全区处理
+      Taro.getSystemInfo().then(info => {
+        setSafeAreaStyle({
+          marginTop: info.statusBarHeight + 'px'
+        })
+      })
+    }
+  }, [])
+
   return (
     <SendContext.Provider value={{
       send,
@@ -502,22 +539,92 @@ const Index = () => {
       <View className={classNames("flex flex-col justify-between w-full bg-[#f5f5f5] overflow-hidden box-border", {
         "pt-6": setting?.is_show_queue  && waitingCount > 0
       })} style={cusStyles}>
+        {/* 顶部状态栏 */}
+        <View className={styles["top-status"]} style={safeAreaStyle}>
+          <View className="flex h-full justify-center items-center">
+            <View className="text-sm font-medium text-white">
+              {getStatusText()}
+            </View>
+            {/* <View className="flex space-x-2">
+              <View
+                className={`text-xs px-3 py-1 rounded-full border ${
+                  serviceStatus === 'ai-serving' && !aiBlocked
+                    ? 'text-blue-600 border-blue-300 bg-blue-50'
+                    : serviceStatus === 'manual-serving'
+                    ? 'text-green-600 border-green-300 bg-green-50'
+                    : serviceStatus === 'transferring-to-manual'
+                    ? 'text-orange-600 border-orange-300 bg-orange-50'
+                    : 'text-gray-400 border-gray-200 bg-gray-100'
+                }`}
+                onClick={() => {
+                  // 只有在AI接待中且AI未阻塞时才能转人工
+                  if (serviceStatus !== 'ai-serving' || aiBlocked) {
+                    return;
+                  }
+                  Taro.showModal({
+                    title: '提示',
+                    content: '确定要转接人工客服吗？',
+                    success: (res) => {
+                      if (res.confirm) {
+                        handleTransferToManual().catch(() => {})
+                      }
+                    }
+                  })
+                }}
+              >
+                {serviceStatus === 'manual-serving' ? '人工接待中' :
+                serviceStatus === 'transferring-to-manual' ? '等待人工中' :
+                aiBlocked ? 'AI思考中' : '转人工'}
+              </View>
+              <View
+                className="text-xs text-gray-600 px-3 py-1 rounded-full border border-gray-200 bg-gray-50"
+                onClick={() => {
+                  Taro.showModal({
+                    title: '提示',
+                    content: '确定要清除所有聊天记录吗？',
+                    success: (res) => {
+                      if (res.confirm) {
+                        clearMessages().then(() => {
+                          // 清除成功后重新初始化聊天状态
+                          setMessages([])
+                          setNoMore(false)
+                          Taro.showToast({
+                            title: '清除成功',
+                            icon: 'success'
+                          })
+                        }).catch(() => {
+                          Taro.showToast({
+                            title: '清除失败',
+                            icon: 'error'
+                          })
+                        })
+                      }
+                    }
+                  })
+                }}
+              >
+                清除记录
+              </View>
+            </View> */}
+          </View>
+        </View>
+        
         <View className={"overflow-hidden flex w-full self-end"}>
           <MessageContainer messages={messages} top={toTop} onScrollTop={getMoreMessage}>
-            {
+            {/* {
               loading &&
               <View className={"p-1 text-base text-center"}>
                 loading...
               </View>
-            }
-            {
+            } */}
+            {/* {
               !loading && noMore && <View className={"text-center py-3 text-xs text-gray-600"}>
                 没有更多了
               </View>
-            }
+            } */}
           </MessageContainer>
         </View>
-        <Input setMessages={setMessages} setNoMore={setNoMore} />
+        <Input setMessages={setMessages} setNoMore={setNoMore} connectService={connectService} />
       </View>
     </SendContext.Provider>
   )

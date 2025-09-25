@@ -11,7 +11,7 @@ import PlusImg from '@/asset/img/more.svg'
 import context from "../../context";
 import classNames from "classnames";
 
-const Index = ({setMessages, setNoMore}) => {
+const Index = ({setMessages, setNoMore, connectService}) => {
 
   const [value, setValue] = React.useState('')
 
@@ -49,8 +49,20 @@ const Index = ({setMessages, setNoMore}) => {
           if (result.success) {
             newAction(result.data.url, 'image').then(act => {
               action.send && action.send(act).then().catch()
+            }).catch(e => {
+              console.log('err', e)
+              Taro.showToast({
+                title: e.errMsg || '上传失败',
+                icon: 'error'
+              })
             })
           }
+        }).catch(e => {
+          console.log('err', e)
+          Taro.showToast({
+            title: e.errMsg || '上传失败',
+            icon: 'error'
+          })
         })
       })
     })
@@ -76,22 +88,6 @@ const Index = ({setMessages, setNoMore}) => {
               title: '清除失败',
               icon: 'error'
             })
-          })
-        }
-      }
-    })
-  }, [])
-
-  const handleConnectAgent = React.useCallback(() => {
-    Taro.showModal({
-      title: '人工客服',
-      content: '是否要转接人工客服？',
-      success: (res) => {
-        if (res.confirm) {
-          // 这里可以添加转接人工客服的逻辑
-          Taro.showToast({
-            title: '正在转接人工客服...',
-            icon: 'none'
           })
         }
       }
@@ -168,16 +164,16 @@ const Index = ({setMessages, setNoMore}) => {
           }}
         />
         
-        {isSending && (
+        {/* {isSending && (
           <View className="mt-1 text-xs text-gray-500">
             发送中...
           </View>
-        )}
-        {action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent && (
+        )} */}
+        {/* {action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent && (
           <View className="mt-1 text-xs text-orange-500">
             AI思考中
           </View>
-        )}
+        )} */}
       </View>
       
       {/* 点击空白处关闭面板 */}
@@ -242,7 +238,7 @@ const Index = ({setMessages, setNoMore}) => {
             className="flex flex-col items-center p-2 rounded-lg active:bg-gray-100"
             onClick={() => {
               if (!isSending && !(action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent)) {
-                handleConnectAgent()
+                connectService()
                 setShowPanel(false)
               }
             }}
