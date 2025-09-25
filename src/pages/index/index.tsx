@@ -327,38 +327,6 @@ const Index = () => {
         "pt-6": setting?.is_show_queue  && waitingCount > 0
       })} style={cusStyles}>
         <View className={"overflow-hidden flex w-full self-end"}>
-          {/* 工具栏 */}
-          <View className={"flex justify-end px-2 py-1 bg-white border-b"}>
-            <View
-              className={"text-xs text-gray-500 px-2 py-1 rounded border"}
-              onClick={() => {
-                Taro.showModal({
-                  title: '提示',
-                  content: '确定要清除所有聊天记录吗？',
-                  success: (res) => {
-                    if (res.confirm) {
-                      clearMessages().then(() => {
-                        // 清除成功后重新初始化聊天状态
-                        setMessages([])
-                        setNoMore(false)
-                        Taro.showToast({
-                          title: '清除成功',
-                          icon: 'success'
-                        })
-                      }).catch(() => {
-                        Taro.showToast({
-                          title: '清除失败',
-                          icon: 'error'
-                        })
-                      })
-                    }
-                  }
-                })
-              }}
-            >
-              清除记录
-            </View>
-          </View>
           <MessageContainer messages={messages} top={toTop} onScrollTop={getMoreMessage}>
             {
               loading &&
@@ -373,7 +341,7 @@ const Index = () => {
             }
           </MessageContainer>
         </View>
-        <Input />
+        <Input setMessages={setMessages} setNoMore={setNoMore} />
       </View>
     </SendContext.Provider>
   )
