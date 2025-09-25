@@ -2,21 +2,21 @@ name: Deploy Customer Frontend to Test Environment
 
 # 客服前端自动部署工作流
 # 触发条件：
-# - develop 分支的 push 事件
-# - develop 分支的 pull request 事件
+# - test 分支的 push 事件
+# - test 分支的 pull request 事件
 # 构建环境：预发布环境 (prod) 生产环境(临时使用)
 # 部署目标：测试服务器
 
 on:
   push:
-    branches: [develop]
+    branches: [test]
   pull_request:
-    branches: [develop]
+    branches: [test]
 
 env:
   # 构建环境配置
   BUILD_MODE: prod
-  API_BASE_URL: https://chat.lut.icu/api
+  API_BASE_URL: https://chat-t.zmyyc.com/api
 
 jobs:
   test:
@@ -183,7 +183,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/test' && github.event_name == 'push'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -197,9 +197,9 @@ jobs:
       - name: Deploy to test server
         uses: appleboy/scp-action@v0.1.4
         with:
-          host: ${{ secrets.DEVELOP_SERVER_HOST }}
-          username: ${{ secrets.DEVELOP_SERVER_USER }}
-          key: ${{ secrets.DEVELOP_SERVER_SSH_KEY }}
+          host: ${{ secrets.TEST_SERVER_HOST }}
+          username: ${{ secrets.TEST_SERVER_USER }}
+          key: ${{ secrets.TEST_SERVER_SSH_KEY }}
           port: 22
           source: 'dist/*'
           target: '/var/www/livechat-frontend-customer'
@@ -209,9 +209,9 @@ jobs:
       - name: Verify deployment
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.DEVELOP_SERVER_HOST }}
-          username: ${{ secrets.DEVELOP_SERVER_USER }}
-          key: ${{ secrets.DEVELOP_SERVER_SSH_KEY }}
+          host: ${{ secrets.TEST_SERVER_HOST }}
+          username: ${{ secrets.TEST_SERVER_USER }}
+          key: ${{ secrets.TEST_SERVER_SSH_KEY }}
           port: 22
           script: |
             echo "🚀 部署完成验证..."
@@ -251,7 +251,7 @@ jobs:
             echo "🏷️  部署版本: ${{ github.sha }}"
             echo "🕒 完成时间: $(date)"
             echo ""
-            echo "📋 访问地址: https://chat.lut.icu/customer"
+            echo "📋 访问地址: https://chat-t.zmyyc.com/customer/"
             echo "🔗 API地址: ${{ env.API_BASE_URL }}"
 
       - name: Send deployment notification
@@ -261,7 +261,7 @@ jobs:
           📅 时间: $(date)
           🏷️ 版本: ${{ github.sha }}
           🌐 环境: ${{ env.BUILD_MODE }}
-          📋 访问: https://chat.lut.icu/customer
+          📋 访问: https://chat-t.zmyyc.com/customer/
           🔗 API: ${{ env.API_BASE_URL }}
           📊 构建产物大小: $(du -sh /var/www/livechat-frontend-customer | cut -f1)
           ✅ 状态: 部署成功"
