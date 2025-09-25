@@ -53,3 +53,10 @@ export const handleRead = (msgId: number) => {
     }
   })
 }
+
+export const clearMessages = () => {
+  return request({
+    url: '/chat/messages',
+    method: 'DELETE'
+  })
+}
