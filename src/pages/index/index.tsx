@@ -39,6 +39,7 @@ const Index = () => {
     setAiBlocked(blocked)
   }, [])
 
+
   React.useEffect(() => {
     getSetting().then(r => {
       setSetting(r.data)
@@ -331,26 +332,26 @@ const Index = () => {
           <View className={"flex justify-between px-2 py-1 bg-white border-b"}>
             <View
               className={`text-xs px-2 py-1 rounded border ${
-                action.isWaitingForAgent || action.isConnectedToAgent
+                isWaitingForAgent || isConnectedToAgent
                   ? 'text-gray-300 border-gray-200'
                   : 'text-blue-500 border-blue-300'
               }`}
               onClick={() => {
-                if (action.isWaitingForAgent || action.isConnectedToAgent) {
+                if (isWaitingForAgent || isConnectedToAgent) {
                   return; // 已经在等待人工或已连接人工，不允许再次转人工
                 }
                 Taro.showModal({
                   title: '提示',
                   content: '确定要转接人工客服吗？',
                   success: (res) => {
-                    if (res.confirm && action.transferToManual) {
-                      action.transferToManual().catch(() => {})
+                    if (res.confirm) {
+                      handleTransferToManual().catch(() => {})
                     }
                   }
                 })
               }}
             >
-              {action.isConnectedToAgent ? '已连接人工' : action.isWaitingForAgent ? '等待人工中...' : '转人工'}
+              {isConnectedToAgent ? '已连接人工' : isWaitingForAgent ? '等待人工中...' : '转人工'}
             </View>
             <View
               className={"text-xs text-gray-500 px-2 py-1 rounded border"}
