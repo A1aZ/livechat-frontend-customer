@@ -26,3 +26,42 @@ export const MessageSource = {
     }
   }
 }
+
+/**
+ * 动态加载任意 URL 的 JS，返回 Promise
+ * 成功后 global 上可拿到导出的变量
+ */
+export function loadScript(src: string): Promise<void> {
+  // 检查脚本是否已经加载
+  const existingScript = document.querySelector(`script[src="${src}"]`);
+  if (existingScript) {
+    // 如果脚本已经加载完成或正在加载中
+    return new Promise((resolve, reject) => {
+      if ((existingScript as HTMLScriptElement).dataset.loaded === 'true') {
+        // 脚本已加载完成，直接返回成功
+        resolve();
+      } else {
+        // 脚本正在加载中，监听其加载事件
+        existingScript.addEventListener('load', () => resolve());
+        existingScript.addEventListener('error', () => 
+          reject(new Error(`load ${src} failed`))
+        );
+      }
+    });
+  }
+  
+  // 创建并加载新脚本
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.async = true;
+    // 添加自定义属性标记加载状态
+    s.dataset.loaded = 'false';
+    s.onload = () => {
+      s.dataset.loaded = 'true';
+      resolve();
+    };
+    s.onerror = () => reject(new Error(`load ${src} failed`));
+    document.head.appendChild(s);
+  });
+}

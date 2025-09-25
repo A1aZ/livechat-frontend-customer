@@ -3,7 +3,8 @@ import {Button, View} from "@tarojs/components";
 import Taro from "@tarojs/taro"
 import {setToken} from "@/util/auth";
 import {handleAnonymousLogin} from "@/api";
-
+import { Image } from "@tarojs/components";
+import logoImage from '@/asset/img/logo.png'
 
 const Index = () => {
 
@@ -20,6 +21,9 @@ const Index = () => {
 
       // 保存token到本地存储
       setToken(res.data.token)
+      Taro.setStorageSync('user', {
+        token: res.data.token, username: res.data.username
+      })
 
       // 跳转到聊天页面
       Taro.navigateTo({
@@ -45,7 +49,7 @@ const Index = () => {
   return (
     <View className='pt-36'>
       <View className='text-center mb-10'>
-        客服系统用户端
+        <Image src={logoImage} className={"w-[100px] h-[100px] mx-auto"} />
       </View>
       <View className={"flex items-center flex-col px-[30px]"}>
         {loading && (

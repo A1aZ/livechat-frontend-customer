@@ -24,7 +24,7 @@ const Index: React.FC<{
 
   const direction = MessageSource.isUser(message.source) ? "right" : "left";
 
-  const name =  direction === "left" ? <View className={"text-xs text-gray-500"}>{message.admin_name}</View> : <></>
+  const name =  direction === "left" ? <View className={"mb-1 text-xs text-gray-500"}>{message.admin_name}</View> : <></>
 
   switch (message.type) {
     case "notice":
@@ -49,10 +49,10 @@ const Index: React.FC<{
       break
     default:
   }
-  return <View className={classNames("flex items-start mt-2", {
+  return <View className={classNames("flex items-start mb-2 mt-2", {
     "flex-row-reverse": direction === "right",
   })}>
-    <View className={"px-1 flex-shrink-0 self-start"}>
+    <View className={"flex px-2 flex-shrink-0 self-start"}>
       {CusAvatar}
     </View>
     <View className={classNames("flex max-w-[60%] overflow-hidden flex-col", {

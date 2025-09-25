@@ -1,7 +1,7 @@
 import type { UserConfigExport } from "@tarojs/cli";
 export default {
   defineConstants: {
-    BASE_URL: '"http://localhost:8080/api/user"',
+    BASE_URL: '"/api/user"',
     WS_URL: '"ws://localhost:8080/api/user/chat/ws"'
   },
   mini: {},
