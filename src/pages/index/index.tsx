@@ -1,18 +1,16 @@
 import React from 'react'
 import Taro from '@tarojs/taro'
-import {View, PageMeta, NavigationBar} from '@tarojs/components'
-import {getMessages, getSetting, handleRead, clearMessages, transferToManual, getReqId, getStatus} from "@/api";
+import {View} from '@tarojs/components'
+import {getMessages, getSetting, handleRead, transferToManual, getReqId, getStatus} from "@/api";
 import {getToken} from "@/util/auth"
 import {isH5, isWeapp} from "@/util/env";
-import {loadScript, MessageSource} from "@/util/index"
+import {MessageSource} from "@/util/index"
 import  styles from './index.module.less'
 
 import SendContext from './context'
 import Input from './components/Input'
 import MessageContainer from './components/MessageContainer/index'
 import classNames from "classnames";
-import { UNI_SDK_URL } from '@/config/const';
-
 
 const pageSize = 30
 
@@ -162,7 +160,7 @@ const Index = () => {
       case 'ai-serving':
         return aiBlocked ? 'AI思考中...' : 'AI接待中'
       case 'transferring-to-manual':
-        return '转接人工中...'
+        return `转接人工中... 前面还有${waitingCount}人`
       case 'manual-serving':
         return '人工接待中'
       default:
@@ -531,11 +529,11 @@ const Index = () => {
       serviceStatus,
       ...setting
     }}>
-      {
+      {/* {
         setting?.is_show_queue  && waitingCount > 0 && <View className={"fixed px-1 h-6 flex items-center w-full text-xs bg-[#fcf6ed] text-[#de8c17]"}>
           前面还有{waitingCount}人在等待
         </View>
-      }
+      } */}
       <View className={classNames("flex flex-col justify-between w-full bg-[#f5f5f5] overflow-hidden box-border", {
         "pt-6": setting?.is_show_queue  && waitingCount > 0
       })} style={cusStyles}>
