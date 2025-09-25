@@ -54,9 +54,11 @@ const Index: React.FC<React.PropsWithChildren<{
       }}
     >
       {
-        props.messages.map(v => {
-          return <MessageItem message={v} key={v.source + v.req_id} showRead={action.is_show_read}/>
-        })
+        props.messages
+          .filter(v => v.type !== 'page-info') // 过滤掉页面信息类型的消息
+          .map(v => {
+            return <MessageItem message={v} key={v.source + v.req_id} showRead={action.is_show_read}/>
+          })
       }
       {props.children}
     </ScrollView>

@@ -27,7 +27,7 @@ declare namespace APP {
   }
 
 
-  export type MessageType = 'text' | 'image' | 'navigator' | 'notice' | "audio" | "video" | "pdf"
+  export type MessageType = 'text' | 'image' | 'navigator' | 'notice' | "audio" | "video" | "pdf" | "page-info"
 
   export type NavigatorContent = {
     image: string,

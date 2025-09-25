@@ -14,6 +14,55 @@
 详见[Taro](https://github.com/NervJS/taro)
 
 
+### 功能特性
 
-### 更新记录 
+#### 自动发送页面信息
+
+客户侧页面支持根据URL的query参数自动发送当前页面信息给客服，方便客服了解用户访问的上下文。
+
+**使用方法：**
+
+在URL中添加 `auto_send=1` 或 `auto_send=true` 参数：
+
+```
+https://yourdomain.com/chat?auto_send=1
+```
+
+**功能说明：**
+
+- 当用户通过包含 `auto_send` 参数的URL访问客服页面时，系统会自动发送一条消息给客服
+- 消息内容包含页面的标题和完整URL
+- 支持H5和小程序环境
+- 每个页面只会发送一次，避免重复发送
+- 自动发送的消息只对客服可见，客户自己不会在聊天界面看到这条消息
+
+**消息格式示例：**
+```
+页面信息
+标题：产品介绍页
+链接：https://yourdomain.com/products?id=123
+```
+
+**在其他页面中嵌入：**
+
+```html
+<!-- HTML链接 -->
+<a href="https://yourdomain.com/chat?auto_send=1">联系客服</a>
+
+<!-- JavaScript跳转 -->
+<button onclick="window.location.href='https://yourdomain.com/chat?auto_send=1'">
+  联系客服
+</button>
+```
+
+#### 其他功能
+
+- **实时聊天**：支持文本、图片、语音、视频等多种消息类型
+- **转人工客服**：可以主动转接人工客服
+- **清除聊天记录**：支持软删除所有聊天记录
+- **排队等待**：显示当前等待人数
+
+
+### 更新记录
+2025.1.5 添加自动发送页面信息功能，支持根据URL参数自动发送页面URL和标题给客服
 2025.1.5 update taro to 4.0.7
