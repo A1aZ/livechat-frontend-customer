@@ -79,7 +79,7 @@ const Index = () => {
     <View className={classNames(`border-t border-solid flex flex-shrink-0 items-center bg-[#F5F6F7]`, {
       "pb-9": isIphonex
     })}>
-      <View className={"w-[83%] p-2 text-sm"}>
+      <View className={"w-[83%] p-2 text-base"}>
         <Input cursorSpacing={20}
           value={value}
           disabled={isSending || (action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent)}
