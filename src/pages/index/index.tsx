@@ -399,12 +399,28 @@ const Index = () => {
   const handleTransferToManual = React.useCallback(async () => {
     try {
       await transferToManual()
+      // API调用成功后立即更新状态，确保用户体验
+      setIsWaitingForAgent(true)
+      setAiBlocked(false)
       Taro.showToast({
         title: '已转接人工客服',
         icon: 'success'
       })
     } catch (error: any) {
       const errorMsg = error?.message || '转接失败'
+
+      // 如果是"已在人工队列中"的错误，说明用户已经在等待人工了
+      // 这种情况下不显示错误，而是更新状态
+      if (errorMsg.includes('已在人工队列中')) {
+        setIsWaitingForAgent(true)
+        setAiBlocked(false)
+        Taro.showToast({
+          title: '正在等待人工客服',
+          icon: 'success'
+        })
+        return
+      }
+
       Taro.showToast({
         title: errorMsg,
         icon: 'error'
