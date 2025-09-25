@@ -79,7 +79,7 @@ const Index = () => {
     <View className={classNames(`border-t border-solid flex flex-shrink-0 items-center bg-[#F5F6F7]`, {
       "pb-9": isIphonex
     })}>
-      <View className={"w-[83%] p-2 text-xl"}>
+      <View className={"w-[83%] p-2 text-sm"}>
         <Input cursorSpacing={20}
           value={value}
           disabled={isSending || (action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent)}
@@ -88,7 +88,7 @@ const Index = () => {
               ? "AI正在回复中，请稍等..."
               : "请输入消息..."
           }
-          className={classNames("bg-white p-1 rounded transition-all", {
+          className={classNames("bg-white p-2 rounded transition-all", {
             "opacity-50": isSending || (action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent),
             "bg-gray-100": action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent
           })}
@@ -115,12 +115,12 @@ const Index = () => {
           }}
         />
         {isSending && (
-          <View className="ml-2 text-xs text-gray-500 flex items-center">
+          <View className="ml-2 mb-1 text-xs text-gray-500 flex items-center">
             发送中...
           </View>
         )}
         {action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent && (
-          <View className="ml-2 text-xs text-orange-500 flex items-center">
+          <View className="ml-2 mb-1 text-xs text-orange-500 flex items-center">
             AI思考中
           </View>
         )}

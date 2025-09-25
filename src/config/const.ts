@@ -1,0 +1,1 @@
+export const UNI_SDK_URL = 'https://raw.gitcode.com/dcloud/uni-app/raw/dev/dist/uni.webview.1.5.6.js'

@@ -4,12 +4,13 @@ import {View} from '@tarojs/components'
 import {getMessages, getSetting, handleRead, clearMessages} from "@/api";
 import {getToken} from "@/util/auth";
 import {isH5, isWeapp} from "@/util/env";
-import {MessageSource} from "@/util/index";
+import {loadScript, MessageSource} from "@/util/index";
 
 import SendContext from './context'
 import Input from './components/Input'
 import MessageContainer from './components/MessageContainer/index'
 import classNames from "classnames";
+import { UNI_SDK_URL } from '@/config/const';
 
 
 const pageSize = 30
@@ -47,6 +48,23 @@ const Index = () => {
 
   // 控制滚动条滚动到底部
   const [toTop, setToTop] = React.useState(false)
+
+
+  // 向外层 uniapp 传递 token
+  // loadScript(UNI_SDK_URL).then(()=>{
+  const user = Taro.getStorageSync('user')
+  console.log('postMessage user', user)
+  try {
+    uni.postMessage({
+      data: user
+    })
+    window.postMessage({
+      data: user
+    })
+  } catch(e) {
+    console.log('postMessage user error', e)
+  }
+  // })
 
   const connect = React.useCallback(() => {
     Taro.connectSocket({

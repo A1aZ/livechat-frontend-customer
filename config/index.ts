@@ -87,6 +87,20 @@ export default defineConfig(async (merge) => {
     h5: {
       publicPath: '/',
       staticDirectory: 'static',
+      // 开发服务器配置
+      devServer: {
+        port: 8080,
+        host: 'localhost',
+        allowedHosts: ['localhost'],
+        proxy: {
+          '/api': {
+            target: 'https://chat-t.zmyyc.com', // 后端地址
+            changeOrigin: true,             // 支持虚拟主机
+            ws: true,
+            secure: false,                  // 关闭证书校验
+          },
+        },
+      },
       output: {
         filename: 'js/[name].[hash:8].js',
         chunkFilename: 'js/[name].[chunkhash:8].js'
