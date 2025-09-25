@@ -28,10 +28,16 @@
 https://yourdomain.com/chat?auto_send=1
 ```
 
+您还可以在URL中添加自定义参数，这些参数也会被发送给客服：
+
+```
+https://yourdomain.com/chat?auto_send=1&product_id=123&user_action=click&source=homepage
+```
+
 **功能说明：**
 
 - 当用户通过包含 `auto_send` 参数的URL访问客服页面时，系统会自动发送一条消息给客服
-- 消息内容包含页面的标题和完整URL
+- 消息内容包含页面的标题、完整URL以及所有自定义参数（除 `auto_send` 外）
 - 支持H5和小程序环境
 - 每个页面只会发送一次，避免重复发送
 - 自动发送的消息只对客服可见，客户自己不会在聊天界面看到这条消息
@@ -41,6 +47,10 @@ https://yourdomain.com/chat?auto_send=1
 页面信息
 标题：产品介绍页
 链接：https://yourdomain.com/products?id=123
+参数：
+product_id=123
+user_action=click
+source=homepage
 ```
 
 **在其他页面中嵌入：**

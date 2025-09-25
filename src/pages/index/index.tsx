@@ -78,7 +78,19 @@ const Index = () => {
 
           // 如果有URL和标题，自动发送消息
           if (pageUrl && pageTitle) {
-            const message = `页面信息\n标题：${pageTitle}\n链接：${pageUrl}`
+            let message = `页面信息\n标题：${pageTitle}\n链接：${pageUrl}`
+
+            // 添加自定义参数（排除auto_send参数）
+            const customParams = Object.keys(params).filter(key =>
+              key !== 'auto_send' && params[key] !== undefined && params[key] !== null
+            )
+
+            if (customParams.length > 0) {
+              message += '\n参数：'
+              customParams.forEach(key => {
+                message += `\n${key}=${params[key]}`
+              })
+            }
 
             // 等待WebSocket连接建立后发送消息
             const sendMessageAfterConnect = () => {
