@@ -60,3 +60,10 @@ export const clearMessages = () => {
     method: 'DELETE'
   })
 }
+
+export const transferToManual = () => {
+  return request({
+    url: '/chat/transfer-manual',
+    method: 'POST'
+  })
+}

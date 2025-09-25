@@ -1,7 +1,7 @@
 import React from 'react'
 import Taro from '@tarojs/taro'
 import {View} from '@tarojs/components'
-import {getMessages, getSetting, handleRead, clearMessages} from "@/api";
+import {getMessages, getSetting, handleRead, clearMessages, transferToManual} from "@/api";
 import {getToken} from "@/util/auth";
 import {isH5, isWeapp} from "@/util/env";
 import {loadScript, MessageSource} from "@/util/index";
@@ -268,6 +268,23 @@ const Index = () => {
 
   const fetchLock = React.useRef(false)
 
+  const handleTransferToManual = React.useCallback(async () => {
+    try {
+      await transferToManual()
+      Taro.showToast({
+        title: '已转接人工客服',
+        icon: 'success'
+      })
+    } catch (error: any) {
+      const errorMsg = error?.message || '转接失败'
+      Taro.showToast({
+        title: errorMsg,
+        icon: 'error'
+      })
+      throw error
+    }
+  }, [])
+
   const getMoreMessage = React.useCallback(async () => {
     if (!fetchLock.current && !noMore) {
       fetchLock.current = true
@@ -316,6 +333,7 @@ const Index = () => {
       isWaitingForAgent,
       isConnectedToAgent,
       ai_block_user_messages: setting?.ai_block_user_messages,
+      transferToManual: handleTransferToManual,
       ...setting
     }}>
       {
