@@ -40,6 +40,7 @@ const Index = () => {
     setAiBlocked(blocked)
   }, [])
 
+
   React.useEffect(() => {
     getSetting().then(r => {
       setSetting(r.data)
