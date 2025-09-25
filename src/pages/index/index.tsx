@@ -1,7 +1,7 @@
 import React from 'react'
 import Taro from '@tarojs/taro'
 import {View} from '@tarojs/components'
-import {getMessages, getSetting, handleRead, clearMessages, transferToManual, getReqId} from "@/api";
+import {getMessages, getSetting, handleRead, clearMessages, transferToManual, getReqId, getStatus} from "@/api";
 import {getToken} from "@/util/auth";
 import {isH5, isWeapp} from "@/util/env";
 import {MessageSource} from "@/util/index";
@@ -278,6 +278,19 @@ const Index = () => {
     setIsWaitingForAgent(false)
     setIsConnectedToAgent(false)
     setAiBlocked(false)
+
+    // 先获取当前状态
+    getStatus().then(statusRes => {
+      const status = statusRes.data
+      setIsWaitingForAgent(status.is_waiting_for_agent)
+      setIsConnectedToAgent(status.is_connected_to_agent)
+      setAiBlocked(status.ai_blocked)
+      setWaitingCount(status.waiting_count)
+    }).catch(() => {
+      // 如果获取状态失败，使用默认状态
+    })
+
+    // 然后获取消息
     getMessages(pageSize,).then(res => {
       if (res.data.length < pageSize) {
         setNoMore(true)
