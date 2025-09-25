@@ -36,6 +36,17 @@ const Index = () => {
 
   const [hasSentPageInfo, setHasSentPageInfo] = React.useState<boolean>(false)
 
+  // 计算当前客服状态
+  const serviceStatus = React.useMemo(() => {
+    if (isConnectedToAgent) {
+      return 'manual-serving' as const // 人工接待中
+    } else if (isWaitingForAgent) {
+      return 'transferring-to-manual' as const // 转接人工中
+    } else {
+      return 'ai-serving' as const // AI接待中
+    }
+  }, [isConnectedToAgent, isWaitingForAgent])
+
   // 暴露AI阻塞状态管理方法
   const handleSetAiBlocked = React.useCallback((blocked: boolean) => {
     setAiBlocked(blocked)
@@ -143,6 +154,20 @@ const Index = () => {
     sendPageInfoToAgent()
   }, [task, hasSentPageInfo])
 
+  // 获取状态显示文本
+  const getStatusText = React.useCallback(() => {
+    switch (serviceStatus) {
+      case 'ai-serving':
+        return aiBlocked ? 'AI思考中...' : 'AI接待中'
+      case 'transferring-to-manual':
+        return '转接人工中...'
+      case 'manual-serving':
+        return '人工接待中'
+      default:
+        return 'AI接待中'
+    }
+  }, [serviceStatus, aiBlocked])
+
   // 控制滚动条滚动到底部
   const [toTop, setToTop] = React.useState(false)
 
@@ -236,6 +261,11 @@ const Index = () => {
       })
       t.onClose(() => {
         setTask(undefined)
+        // WebSocket连接断开时重置相关状态
+        setIsWaitingForAgent(false)
+        setIsConnectedToAgent(false)
+        setAiBlocked(false)
+        setWaitingCount(0)
       })
       setTask(t)
     })
@@ -414,6 +444,7 @@ const Index = () => {
       isConnectedToAgent,
       ai_block_user_messages: setting?.ai_block_user_messages,
       transferToManual: handleTransferToManual,
+      serviceStatus,
       ...setting
     }}>
       {
@@ -426,16 +457,22 @@ const Index = () => {
       })} style={cusStyles}>
         <View className={"overflow-hidden flex w-full self-end"}>
           {/* 工具栏 */}
-          <View className={"flex justify-between px-2 py-1 bg-white border-b"}>
+          <View className={"flex justify-between items-center px-2 py-1 bg-white border-b"}>
+            {/* 状态显示 */}
+            <View className={"text-xs text-gray-600"}>
+              {getStatusText()}
+            </View>
+
             <View
               className={`text-xs px-2 py-1 rounded border ${
-                isWaitingForAgent || isConnectedToAgent
-                  ? 'text-gray-300 border-gray-200'
-                  : 'text-blue-500 border-blue-300'
+                serviceStatus === 'ai-serving' && !aiBlocked
+                  ? 'text-blue-500 border-blue-300'
+                  : 'text-gray-300 border-gray-200'
               }`}
               onClick={() => {
-                if (isWaitingForAgent || isConnectedToAgent) {
-                  return; // 已经在等待人工或已连接人工，不允许再次转人工
+                // 只有在AI接待中且AI未阻塞时才能转人工
+                if (serviceStatus !== 'ai-serving' || aiBlocked) {
+                  return;
                 }
                 Taro.showModal({
                   title: '提示',
@@ -448,7 +485,9 @@ const Index = () => {
                 })
               }}
             >
-              {isConnectedToAgent ? '已连接人工' : isWaitingForAgent ? '等待人工中...' : '转人工'}
+              {serviceStatus === 'manual-serving' ? '已连接人工' :
+               serviceStatus === 'transferring-to-manual' ? '等待人工中...' :
+               aiBlocked ? 'AI思考中' : '转人工'}
             </View>
             <View
               className={"text-xs text-gray-500 px-2 py-1 rounded border"}
