@@ -252,6 +252,19 @@ const Index = () => {
                 });
                 break;
               }
+              case "status-update": {
+                const data = action.data as {
+                  is_waiting_for_agent: boolean,
+                  is_connected_to_agent: boolean,
+                  ai_blocked: boolean,
+                  waiting_count: number
+                }
+                setIsWaitingForAgent(data.is_waiting_for_agent)
+                setIsConnectedToAgent(data.is_connected_to_agent)
+                setAiBlocked(data.ai_blocked)
+                setWaitingCount(data.waiting_count)
+                break;
+              }
               case "read": {
                 const msgIds = action.data as number[]
                 setMessages(prevState => {
