@@ -1,3 +1,8 @@
+import React from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
+
 export function isPhone(phone: string) {
   return /^1[123456789]\d{9}$/.test(phone)
 }
@@ -65,3 +70,39 @@ export function loadScript(src: string): Promise<void> {
     document.head.appendChild(s);
   });
 }
+
+// 解析markdown内容
+export const parseMarkdown = (content: string): React.ReactElement => {
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkGfm, remarkBreaks]}
+      components={{
+        // 自定义段落样式
+        p: ({ children }) => <span style={{ margin: 0 }}>{children}</span>,
+        // 自定义链接样式
+        a: ({ children, href }) => (
+          <span
+            style={{
+              color: '#1890ff',
+              textDecoration: 'underline',
+              cursor: 'pointer'
+            }}
+            onClick={() => {
+              if (href) {
+                // 在小程序环境中使用Taro的navigateTo或外部链接处理
+                // 这里暂时使用window.open作为示例
+                if (typeof window !== 'undefined' && window.open) {
+                  window.open(href, '_blank');
+                }
+              }
+            }}
+          >
+            {children}
+          </span>
+        ),
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+};
