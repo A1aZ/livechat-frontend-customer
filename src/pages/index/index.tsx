@@ -102,17 +102,17 @@ const Index = () => {
             message += `\n链接：未知链接`
           }
 
-          // 添加自定义参数（排除auto_send参数）
-          const customParams = Object.keys(params).filter(key =>
-            key !== 'auto_send' && params[key] !== undefined && params[key] !== null
-          )
-
-          if (customParams.length > 0) {
-            message += '\n参数：'
-            customParams.forEach(key => {
-              message += `\n${key}=${params[key]}`
+            // 添加自定义参数
+            const customParams = JSON.parse(decodeURIComponent(params.msgData || '{}'))
+            console.log('customParams', customParams)
+            if(Object.keys(customParams).length>0) {
+              message += '\n参数：'
+            }
+            Object.keys(customParams).forEach(key => {
+              message += `\n${key}=${customParams[key]}`
             })
-          }
+
+            console.log('message', message)
 
           // 等待WebSocket连接建立后发送消息
           const sendMessageAfterConnect = () => {
