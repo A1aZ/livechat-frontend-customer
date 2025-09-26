@@ -7,7 +7,7 @@ import {clearMessages} from "@/api";
 import PictureImg from '@/asset/img/picture.svg'
 import serviceImg from '@/asset/img/service.svg'
 import clearImg from '@/asset/img/clear.svg'
-import PlusImg from '@/asset/img/more.svg'
+import PlusImg from '@/asset/img/plus-border.svg'
 import context from "../../context";
 import classNames from "classnames";
 
