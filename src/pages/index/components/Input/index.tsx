@@ -149,10 +149,25 @@ const Index = ({setMessages, setNoMore, connectService}) => {
       </View>
       
       {/* 右侧功能区 */}
-      <View className={"flex flex-col items-center"}>
+      <View className={"flex items-center"}>
+        {/* 人工 */}
+        <Image
+            src={serviceImg}
+            className={classNames("w-8 mr-2 h-auto", {
+              "opacity-50": isSending || (action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent)
+            })}
+            mode='widthFix'
+            onClick={() => {
+              if (!isSending && !(action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent)) {
+                connectService()
+                setShowPanel(false)
+              }
+            }}
+          />
+        {/* 更多按钮 */}
         <Image
           src={PlusImg}
-          className={classNames("w-8 h-auto transition-all", {
+          className={classNames("w-8 h-auto mr-2 transition-all", {
             "opacity-50": isSending || (action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent),
             "rotate-45": showPanel
           })}
@@ -234,7 +249,7 @@ const Index = ({setMessages, setNoMore, connectService}) => {
           </View>
           
           {/* 人工客服 */}
-          <View 
+          {/* <View 
             className="flex flex-col items-center p-2 rounded-lg active:bg-gray-100"
             onClick={() => {
               if (!isSending && !(action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent)) {
@@ -252,7 +267,7 @@ const Index = ({setMessages, setNoMore, connectService}) => {
               mode='widthFix'
             />
             <View className="text-xs text-gray-600 mt-1">人工客服</View>
-          </View>
+          </View> */}
         </View>
       )}
       
