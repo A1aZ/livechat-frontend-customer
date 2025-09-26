@@ -87,24 +87,35 @@ const Index = () => {
             }
           }
 
-          // 如果有URL和标题，自动发送消息
-          if (pageUrl && pageTitle) {
-            let message = `页面信息\n标题：${pageTitle}\n链接：${pageUrl}`
+          // 自动发送消息，即使没有URL和标题也要发送
+          let message = `页面信息`
 
-            // 添加自定义参数（排除auto_send参数）
-            const customParams = Object.keys(params).filter(key =>
-              key !== 'auto_send' && params[key] !== undefined && params[key] !== null
-            )
+          if (pageTitle) {
+            message += `\n标题：${pageTitle}`
+          } else {
+            message += `\n标题：未知页面`
+          }
 
-            if (customParams.length > 0) {
-              message += '\n参数：'
-              customParams.forEach(key => {
-                message += `\n${key}=${params[key]}`
-              })
-            }
+          if (pageUrl) {
+            message += `\n链接：${pageUrl}`
+          } else {
+            message += `\n链接：未知链接`
+          }
 
-            // 等待WebSocket连接建立后发送消息
-            const sendMessageAfterConnect = () => {
+          // 添加自定义参数（排除auto_send参数）
+          const customParams = Object.keys(params).filter(key =>
+            key !== 'auto_send' && params[key] !== undefined && params[key] !== null
+          )
+
+          if (customParams.length > 0) {
+            message += '\n参数：'
+            customParams.forEach(key => {
+              message += `\n${key}=${params[key]}`
+            })
+          }
+
+          // 等待WebSocket连接建立后发送消息
+          const sendMessageAfterConnect = () => {
               if (task && task.readyState === 1) { // WebSocket.OPEN = 1
                 // 获取req_id
                 getReqId().then(res => {
@@ -143,9 +154,8 @@ const Index = () => {
               }
             }
 
-            // 延迟执行，确保组件已完全初始化
-            setTimeout(sendMessageAfterConnect, 2000)
-          }
+          // 延迟执行，确保组件已完全初始化
+          setTimeout(sendMessageAfterConnect, 2000)
         }
       } catch (error) {
         console.error('获取页面信息失败:', error)
@@ -499,7 +509,7 @@ const Index = () => {
 
   // 安全区样式
   const [safeAreaStyle, setSafeAreaStyle] = React.useState({})
-  
+
   React.useEffect(() => {
     if (isH5()) {
       // H5环境下使用CSS变量处理安全区
@@ -607,7 +617,7 @@ const Index = () => {
             </View> */}
           </View>
         </View>
-        
+
         <View className={"overflow-hidden flex w-full self-end"}>
           <MessageContainer messages={messages} top={toTop} onScrollTop={getMoreMessage}>
             {/* {
