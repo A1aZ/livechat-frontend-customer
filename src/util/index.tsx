@@ -48,13 +48,13 @@ export function loadScript(src: string): Promise<void> {
       } else {
         // 脚本正在加载中，监听其加载事件
         existingScript.addEventListener('load', () => resolve());
-        existingScript.addEventListener('error', () => 
+        existingScript.addEventListener('error', () =>
           reject(new Error(`load ${src} failed`))
         );
       }
     });
   }
-  
+
   // 创建并加载新脚本
   return new Promise((resolve, reject) => {
     const s = document.createElement('script');
@@ -100,6 +100,8 @@ export const parseMarkdown = (content: string): React.ReactElement => {
             {children}
           </span>
         ),
+        // 禁用删除线效果，将删除线文本正常显示
+        del: ({ children }) => <span>{children}</span>,
       }}
     >
       {content}
