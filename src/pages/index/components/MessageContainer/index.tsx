@@ -40,7 +40,7 @@ const Index: React.FC<React.PropsWithChildren<{
 
 
   return (
-    <ScrollView id='content' className={"flex flex-col-reverse h-auto pb-2"} scrollTop={top} scrollY
+    <ScrollView id='content' className={"flex flex-col-reverse h-auto pt-4 pb-2"} scrollTop={top} scrollY
       enableFlex
       ref={view}
       onScroll={e => {
