@@ -8,7 +8,8 @@ import context from "@/pages/index/context";
 const Index: React.FC<React.PropsWithChildren<{
   messages: APP.Message[],
   top: boolean,
-  onScrollTop: () => void
+  onScrollTop: () => void,
+  recent: React.ReactNode | undefined
 }>> = (props) => {
 
   const [top, setTop] = React.useState(0)
@@ -53,6 +54,7 @@ const Index: React.FC<React.PropsWithChildren<{
         })
       }}
     >
+      {props.recent}
       {
         props.messages
           .filter(v => v.type !== 'page-info') // 过滤掉页面信息类型的消息

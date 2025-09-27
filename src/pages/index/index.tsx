@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import Taro from '@tarojs/taro'
 import {View} from '@tarojs/components'
 import {getMessages, getSetting, handleRead, transferToManual, getReqId, getStatus} from "@/api";
@@ -539,6 +539,16 @@ const Index = () => {
       })
     }
   }, [])
+  
+  const recent = useMemo(() => {
+      return (
+        <View className="flex h-full justify-center items-center mt-2">
+            <View className="text-sm text-gray-500">
+              {getStatusText()}
+            </View>
+        </View>
+      )
+  }, [serviceStatus, aiBlocked])
 
   return (
     <SendContext.Provider value={{
@@ -558,81 +568,18 @@ const Index = () => {
           前面还有{waitingCount}人在等待
         </View>
       } */}
-      <View className={classNames("flex flex-col justify-between w-full bg-[#f5f5f5] overflow-hidden box-border", {
-        "pt-6": setting?.is_show_queue  && waitingCount > 0
-      })} style={cusStyles}>
+      <View className={classNames("flex flex-col justify-between w-full bg-[#f5f5f5] overflow-hidden box-border")} style={cusStyles}>
         {/* 顶部状态栏 */}
-        <View className={styles["top-status"]} style={safeAreaStyle}>
+        {/* <View className={styles["top-status"]} style={safeAreaStyle}>
           <View className="flex h-full justify-center items-center">
             <View className="text-sm font-medium text-white">
               {getStatusText()}
             </View>
-            {/* <View className="flex space-x-2">
-              <View
-                className={`text-xs px-3 py-1 rounded-full border ${
-                  serviceStatus === 'ai-serving' && !aiBlocked
-                    ? 'text-blue-600 border-blue-300 bg-blue-50'
-                    : serviceStatus === 'manual-serving'
-                    ? 'text-green-600 border-green-300 bg-green-50'
-                    : serviceStatus === 'transferring-to-manual'
-                    ? 'text-orange-600 border-orange-300 bg-orange-50'
-                    : 'text-gray-400 border-gray-200 bg-gray-100'
-                }`}
-                onClick={() => {
-                  // 只有在AI接待中且AI未阻塞时才能转人工
-                  if (serviceStatus !== 'ai-serving' || aiBlocked) {
-                    return;
-                  }
-                  Taro.showModal({
-                    title: '提示',
-                    content: '确定要转接人工客服吗？',
-                    success: (res) => {
-                      if (res.confirm) {
-                        handleTransferToManual().catch(() => {})
-                      }
-                    }
-                  })
-                }}
-              >
-                {serviceStatus === 'manual-serving' ? '人工接待中' :
-                serviceStatus === 'transferring-to-manual' ? '等待人工中' :
-                aiBlocked ? 'AI思考中' : '转人工'}
-              </View>
-              <View
-                className="text-xs text-gray-600 px-3 py-1 rounded-full border border-gray-200 bg-gray-50"
-                onClick={() => {
-                  Taro.showModal({
-                    title: '提示',
-                    content: '确定要清除所有聊天记录吗？',
-                    success: (res) => {
-                      if (res.confirm) {
-                        clearMessages().then(() => {
-                          // 清除成功后重新初始化聊天状态
-                          setMessages([])
-                          setNoMore(false)
-                          Taro.showToast({
-                            title: '清除成功',
-                            icon: 'success'
-                          })
-                        }).catch(() => {
-                          Taro.showToast({
-                            title: '清除失败',
-                            icon: 'error'
-                          })
-                        })
-                      }
-                    }
-                  })
-                }}
-              >
-                清除记录
-              </View>
-            </View> */}
           </View>
-        </View>
+        </View> */}
 
         <View className={"overflow-hidden flex w-full self-end"}>
-          <MessageContainer messages={messages} top={toTop} onScrollTop={getMoreMessage}>
+          <MessageContainer messages={messages} recent={recent} top={toTop} onScrollTop={getMoreMessage}>
             {/* {
               loading &&
               <View className={"p-1 text-base text-center"}>
