@@ -113,7 +113,6 @@ const Index = ({setMessages, setNoMore, connectService}) => {
           title: error
         })
       }
-      throw error
     } finally {
       setIsSending(false)
     }
@@ -128,6 +127,7 @@ const Index = ({setMessages, setNoMore, connectService}) => {
       <View className={"w-[83%] p-2 text-base"}>
         <Input cursorSpacing={20}
           value={value}
+          confirmType="send"
           disabled={isSending || (action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent)}
           placeholder={
             action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent
