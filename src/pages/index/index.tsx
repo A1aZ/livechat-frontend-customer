@@ -2,14 +2,14 @@ import React, { useMemo } from 'react'
 import Taro from '@tarojs/taro'
 import {View} from '@tarojs/components'
 import {getMessages, getSetting, handleRead, transferToManual, getReqId, getStatus} from "@/api";
-import {getToken} from "@/util/auth"
 import {isH5, isWeapp} from "@/util/env";
 import {MessageSource} from "@/util/index"
-import  styles from './index.module.less'
+import getWebSocketManager, { WebSocketMessage } from '@/util/websocket'
 
 import SendContext from './context'
 import Input from './components/Input'
 import MessageContainer from './components/MessageContainer/index'
+import ConnectionStatus from '@/components/ConnectionStatus'
 import classNames from "classnames";
 
 const pageSize = 30
@@ -22,7 +22,9 @@ const Index = () => {
 
   const [noMore, setNoMore] = React.useState(false)
 
-  const [task, setTask] = React.useState<Taro.SocketTask | undefined>()
+  // 使用新的WebSocket管理器
+  const wsManager = React.useMemo(() => getWebSocketManager(), [])
+  const [isConnected, setIsConnected] = React.useState(false)
 
   const [waitingCount, setWaitingCount] = React.useState<number>(0)
 
@@ -116,9 +118,9 @@ const Index = () => {
 
           // 等待WebSocket连接建立后发送消息
           const sendMessageAfterConnect = () => {
-              if (task && task.readyState === 1) { // WebSocket.OPEN = 1
+              if (wsManager.isConnected()) {
                 // 获取req_id
-                getReqId().then(res => {
+                getReqId().then(async res => {
                   const action = {
                     data: {
                       admin_id: 0,
@@ -134,16 +136,11 @@ const Index = () => {
                     action: 'send-message',
                   }
                   // 对于自动发送的消息，直接通过WebSocket发送，不添加到本地消息列表
-                  if (task && task.readyState === 1) {
-                    task.send({
-                      data: JSON.stringify(action),
-                      success: () => {
-                        setHasSentPageInfo(true)
-                      },
-                      fail: (res) => {
-                        console.error('自动发送页面信息失败:', res.errMsg)
-                      }
-                    })
+                  try {
+                    await wsManager.send(action)
+                    setHasSentPageInfo(true)
+                  } catch (error) {
+                    console.error('自动发送页面信息失败:', error)
                   }
                 }).catch(error => {
                   console.error('获取req_id失败:', error)
@@ -163,7 +160,7 @@ const Index = () => {
     }
 
     sendPageInfoToAgent()
-  }, [task, hasSentPageInfo])
+  }, [wsManager, hasSentPageInfo])
 
   // 获取状态显示文本
   const getStatusText = React.useCallback(() => {
@@ -188,130 +185,142 @@ const Index = () => {
   const user = Taro.getStorageSync('user')
   console.log('postMessage user', user)
   try {
-    uni.postMessage({
-      data: user
-    })
-    window.postMessage({
-      data: user
-    })
+    // 小程序环境
+    if (typeof (globalThis as any).uni !== 'undefined') {
+      (globalThis as any).uni.postMessage({
+        data: user
+      })
+    }
+    // H5环境
+    if (typeof window !== 'undefined') {
+      window.postMessage({
+        data: user
+      })
+    }
   } catch(e) {
     console.log('postMessage user error', e)
   }
   // })
 
-  const connect = React.useCallback(() => {
-    Taro.connectSocket({
-      url: `${WS_URL}?token=` + getToken()
-    }).then(t => {
-      t.onError(() => {
-        setTask(undefined)
-        Taro.showToast({
-          title: '连接服务器失败',
-          icon: 'none'
-        })
-      })
-      t.onOpen(() => {
-      })
-      t.onMessage(result => {
-        if (result.data != '') {
-          try {
-            const action: APP.Action = JSON.parse(result.data)
-            switch (action.action) {
-              case 'receive-message': {
-                const msg = action.data as APP.Message
-                if (msg.id) {
-                  handleRead(msg.id).then().catch()
-                }
-                setMessages(prev => {
-                  return [msg].concat(prev)
-                })
-                if (msg.admin_id > 0) { // 说明已被接入
-                  setWaitingCount(0)
-                  setIsWaitingForAgent(false) // 人工客服接手，结束等待状态
-                  setIsConnectedToAgent(true) // 标记已连接到人工客服
-                  setAiBlocked(false) // 转接人工时也要清除AI阻塞状态
-                }
-                // 如果收到AI消息，解除阻塞状态
-                if (MessageSource.isAi(msg.source)) {
-                  setAiBlocked(false)
-                }
-                setToTop(prevState => !prevState)
-                break
-              }
-              case "receipt": {
-                const data : APP.Receipt = action.data
-                setMessages(prevState => {
-                  for (const x of prevState) {
-                    if (x.req_id === data.req_id) {
-                      x.id = data.msg_id;
-                      x.success = true;
-                      x.is_read = false;
-                    }
-                  }
-                  return [...prevState]
-                });
-                break;
-              }
-              case "status-update": {
-                const data = action.data as {
-                  is_waiting_for_agent: boolean,
-                  is_connected_to_agent: boolean,
-                  ai_blocked: boolean,
-                  waiting_count: number
-                }
-                setIsWaitingForAgent(data.is_waiting_for_agent)
-                setIsConnectedToAgent(data.is_connected_to_agent)
-                setAiBlocked(data.ai_blocked)
-                setWaitingCount(data.waiting_count)
-                break;
-              }
-              case "read": {
-                const msgIds = action.data as number[]
-                setMessages(prevState => {
-                  for (const x of prevState) {
-                    if (msgIds.includes(x.id as number)) {
-                      x.is_read = true
-                    }
-                  }
-                  return [...prevState]
-                })
-                break;
-              }
-              case "waiting-user-count": {
-                const count = action.data
-                setWaitingCount(count)
-                // 收到等待人数消息时，标记用户正在等待人工客服，并清除AI阻塞状态
-                setIsWaitingForAgent(true)
-                setAiBlocked(false)
-                break
-              }
-              case "ai-block": {
-                setAiBlocked(true)
-                break
-              }
-              case "ai-unblock": {
-                setAiBlocked(false)
-                break
-              }
-            }
-          }catch (e) {
-
-          }
-
+  // WebSocket消息处理
+  const handleWebSocketMessage = React.useCallback((message: WebSocketMessage) => {
+    switch (message.action) {
+      case 'receive-message': {
+        const msg = message.data as APP.Message
+        if (msg.id) {
+          handleRead(msg.id).then().catch()
         }
-      })
-      t.onClose(() => {
-        setTask(undefined)
-        // WebSocket连接断开时重置相关状态
+        setMessages(prev => {
+          return [msg].concat(prev)
+        })
+        if (msg.admin_id > 0) { // 说明已被接入
+          setWaitingCount(0)
+          setIsWaitingForAgent(false) // 人工客服接手，结束等待状态
+          setIsConnectedToAgent(true) // 标记已连接到人工客服
+          setAiBlocked(false) // 转接人工时也要清除AI阻塞状态
+        }
+        // 如果收到AI消息，解除阻塞状态
+        if (MessageSource.isAi(msg.source)) {
+          setAiBlocked(false)
+        }
+        setToTop(prevState => !prevState)
+        break
+      }
+      case "receipt": {
+        const data: APP.Receipt = message.data
+        setMessages(prevState => {
+          for (const x of prevState) {
+            if (x.req_id === data.req_id) {
+              x.id = data.msg_id;
+              x.success = true;
+              x.is_read = false;
+            }
+          }
+          return [...prevState]
+        });
+        break;
+      }
+      case "status-update": {
+        const data = message.data as {
+          is_waiting_for_agent: boolean,
+          is_connected_to_agent: boolean,
+          ai_blocked: boolean,
+          waiting_count: number
+        }
+        setIsWaitingForAgent(data.is_waiting_for_agent)
+        setIsConnectedToAgent(data.is_connected_to_agent)
+        setAiBlocked(data.ai_blocked)
+        setWaitingCount(data.waiting_count)
+        break;
+      }
+      case "read": {
+        const msgIds = message.data as number[]
+        setMessages(prevState => {
+          for (const x of prevState) {
+            if (msgIds.includes(x.id as number)) {
+              x.is_read = true
+            }
+          }
+          return [...prevState]
+        })
+        break;
+      }
+      case "waiting-user-count": {
+        const count = message.data
+        setWaitingCount(count)
+        // 收到等待人数消息时，标记用户正在等待人工客服，并清除AI阻塞状态
+        setIsWaitingForAgent(true)
+        setAiBlocked(false)
+        break
+      }
+      case "ai-block": {
+        setAiBlocked(true)
+        break
+      }
+      case "ai-unblock": {
+        setAiBlocked(false)
+        break
+      }
+    }
+  }, [])
+
+  const connect = React.useCallback(async () => {
+    try {
+      await wsManager.connect()
+      setIsConnected(true)
+      console.log('WebSocket连接成功')
+    } catch (error) {
+      console.error('WebSocket连接失败:', error)
+      setIsConnected(false)
+    }
+  }, [wsManager])
+
+  // 设置WebSocket事件监听
+  React.useEffect(() => {
+    wsManager.onMessage(handleWebSocketMessage)
+
+    wsManager.onOpen(() => {
+      setIsConnected(true)
+      console.log('WebSocket连接已建立')
+    })
+
+    wsManager.onClose((code) => {
+      setIsConnected(false)
+      console.log('WebSocket连接已关闭, code:', code)
+      // WebSocket连接断开时重置相关状态
+      if (code !== 1000) { // 非正常关闭
         setIsWaitingForAgent(false)
         setIsConnectedToAgent(false)
         setAiBlocked(false)
         setWaitingCount(0)
-      })
-      setTask(t)
+      }
     })
 
-  }, [])
+    wsManager.onError((error) => {
+      console.error('WebSocket连接错误:', error)
+      setIsConnected(false)
+    })
+  }, [wsManager, handleWebSocketMessage])
 
   const init = React.useCallback(() => {
     setNoMore(false)
@@ -344,40 +353,8 @@ const Index = () => {
 
 
   const send = React.useCallback((act: APP.Action): Promise<boolean> => {
-    return (new Promise((resolve, reject) => {
-      if (task) {
-        task.send({
-          data: JSON.stringify(act),
-          success: () => {
-            setMessages(prev => {
-              return [...[act.data].concat(prev)]
-            })
-            setToTop(prevState => !prevState)
-            resolve(true)
-          },
-          fail: res => {
-            // 检查是否是AI阻塞错误
-            if (res.errMsg && res.errMsg.includes('AI正在回复中')) {
-              setAiBlocked(true)
-              Taro.showToast({
-                title: 'AI正在思考中，请稍等...',
-                icon: 'none',
-                duration: 2000
-              })
-              // 3秒后自动解除阻塞状态（作为fallback）
-              setTimeout(() => {
-                setAiBlocked(false)
-              }, 3000)
-            } else {
-              Taro.showToast({
-                icon: 'none',
-                title: res.errMsg
-              })
-            }
-            reject(res.errMsg)
-          }
-        })
-      } else {
+    return new Promise(async (resolve, reject) => {
+      if (!isConnected) {
         Taro.showModal({
           title: '提示',
           content: '聊天服务器已断开',
@@ -388,30 +365,45 @@ const Index = () => {
           }
         })
         reject("服务器已断开")
+        return
       }
-    }))
-  }, [connect, task])
+
+      try {
+        await wsManager.send(act)
+        setMessages(prev => {
+          return [...[act.data].concat(prev)]
+        })
+        setToTop(prevState => !prevState)
+        resolve(true)
+      } catch (error: any) {
+        // 检查是否是AI阻塞错误
+        if (error.message && error.message.includes('AI正在回复中')) {
+          setAiBlocked(true)
+          Taro.showToast({
+            title: 'AI正在思考中，请稍等...',
+            icon: 'none',
+            duration: 2000
+          })
+          // 3秒后自动解除阻塞状态（作为fallback）
+          setTimeout(() => {
+            setAiBlocked(false)
+          }, 3000)
+        } else {
+          Taro.showToast({
+            icon: 'none',
+            title: error.message || '发送失败'
+          })
+        }
+        reject(error.message || '发送失败')
+      }
+    })
+  }, [connect, wsManager, isConnected])
 
 
   const close = React.useCallback(() => {
-    if (isWeapp()) {
-      setTask(prevState => {
-        if (prevState) {
-          Taro.closeSocket().then().catch(() => {
-          })
-        }
-        return undefined
-      })
-    }
-    if (isH5()) {
-      setTask(prevState => {
-        if (prevState) {
-          prevState.ws.close()
-        }
-        return undefined
-      })
-    }
-  }, [])
+    wsManager.disconnect()
+    setIsConnected(false)
+  }, [wsManager])
 
   React.useEffect(() => {
     if (isH5()) {
@@ -520,26 +512,8 @@ const Index = () => {
     return {}
   }, [])
 
-  // 安全区样式
-  const [safeAreaStyle, setSafeAreaStyle] = React.useState({})
+  // 注意：safeAreaStyle相关代码已被注释，如需要可以重新启用
 
-  React.useEffect(() => {
-    if (isH5()) {
-      // H5环境下使用CSS变量处理安全区
-      setSafeAreaStyle({
-        marginTop: 'env(safe-area-inset-top, 20px)'
-      })
-    }
-    if (isWeapp()) {
-      // 小程序环境下使用Taro的安全区处理
-      Taro.getSystemInfo().then(info => {
-        setSafeAreaStyle({
-          marginTop: info.statusBarHeight + 'px'
-        })
-      })
-    }
-  }, [])
-  
   const recent = useMemo(() => {
       return (
         <View className="flex h-full justify-center items-center mt-2">
@@ -569,6 +543,9 @@ const Index = () => {
         </View>
       } */}
       <View className={classNames("flex flex-col justify-between w-full bg-[#f5f5f5] overflow-hidden box-border")} style={cusStyles}>
+        {/* 连接状态指示器 */}
+        <ConnectionStatus className="absolute top-2 right-2 z-10" />
+
         {/* 顶部状态栏 */}
         {/* <View className={styles["top-status"]} style={safeAreaStyle}>
           <View className="flex h-full justify-center items-center">
