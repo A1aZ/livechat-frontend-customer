@@ -1,7 +1,7 @@
 import React from 'react'
 import {Button, View} from "@tarojs/components";
 import Taro from "@tarojs/taro"
-import {setToken, getToken} from "@/util/auth";
+import {setToken, getToken, removeToken} from "@/util/auth";
 import {handleAnonymousLogin} from "@/api";
 import { Image } from "@tarojs/components";
 import logoImage from '@/asset/img/logo.png'
@@ -11,8 +11,16 @@ const Index = () => {
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState(false)
   const [isInitialized, setIsInitialized] = React.useState(false)
+  const [isLoggingIn, setIsLoggingIn] = React.useState(false)
 
   const anonymousLogin = React.useCallback((providedParams?: {username?: string, user_id?: string}) => {
+    // 防止重复调用
+    if (isLoggingIn) {
+      console.log('正在登录中，跳过重复调用')
+      return
+    }
+
+    setIsLoggingIn(true)
     setLoading(true)
     setError(false)
 
@@ -38,12 +46,15 @@ const Index = () => {
         token: res.data.token, username: res.data.username
       })
 
-      // 跳转到聊天页面
-      Taro.navigateTo({
-        url: '/pages/index/index'
-      })
+      // 等待存储完成后再跳转，避免时序问题
+      setTimeout(() => {
+        Taro.navigateTo({
+          url: '/pages/index/index'
+        })
+      }, 100)
     }).catch((err) => {
       console.error('匿名登录失败:', err);
+      setIsLoggingIn(false)
       setLoading(false)
       setError(true)
       Taro.showToast({
@@ -52,7 +63,7 @@ const Index = () => {
         duration: 3
       })
     })
-  }, [])
+  }, [isLoggingIn])
 
   // 组件挂载时检查登录状态
   React.useEffect(() => {
@@ -74,9 +85,11 @@ const Index = () => {
       } else {
         // 如果有token但没有URL参数，直接跳转到聊天页面
         console.log('发现现有token，直接跳转到聊天页面')
-        Taro.navigateTo({
-          url: '/pages/index/index'
-        })
+        setTimeout(() => {
+          Taro.navigateTo({
+            url: '/pages/index/index'
+          })
+        }, 100)
       }
     } else {
       // 如果没有登录，则执行匿名登录
@@ -106,7 +119,10 @@ const Index = () => {
             <View className={"text-red-500 mb-4"}>连接失败</View>
             <Button
               className={"bg-blue-500 text-white px-6 py-2 rounded"}
-              onClick={() => anonymousLogin()}
+              onClick={() => {
+                setIsLoggingIn(false)
+                anonymousLogin()
+              }}
             >
               重试连接
             </Button>
