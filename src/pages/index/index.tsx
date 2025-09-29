@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import Taro from '@tarojs/taro'
 import {View} from '@tarojs/components'
-import {getMessages, getSetting, handleRead, transferToManual, getReqId, getStatus} from "@/api";
+import {getMessages, getSetting, handleRead, transferToManual, getReqId, getStatus, handleAnonymousLogin} from "@/api";
 import {isH5, isWeapp} from "@/util/env";
 import {MessageSource} from "@/util/index"
 import getWebSocketManager, { WebSocketMessage } from '@/util/websocket'
@@ -60,6 +60,41 @@ const Index = () => {
     getSetting().then(r => {
       setSetting(r.data)
     })
+  }, [])
+
+  // 检查URL参数并更新用户信息
+  React.useEffect(() => {
+    const updateUserFromUrlParams = async () => {
+      try {
+        const instance = Taro.getCurrentInstance()
+        const params = instance.router?.params || {}
+        const { username, user_id } = params
+
+        // 如果URL中有username或user_id参数，调用API更新用户信息
+        if (username || user_id) {
+          console.log('检测到URL参数，更新用户信息:', { username, user_id })
+          const loginData: {username?: string, user_id?: string} = {}
+          if (username) loginData.username = username
+          if (user_id) loginData.user_id = user_id
+
+          const res = await handleAnonymousLogin(loginData)
+          console.log('用户信息更新成功:', res.data)
+
+          // 更新本地存储的用户信息
+          Taro.setStorageSync('user', {
+            token: res.data.token,
+            username: res.data.username
+          })
+
+          // 如果token发生变化，需要重新连接WebSocket
+          // 这里可以添加重新连接的逻辑，如果需要的话
+        }
+      } catch (error) {
+        console.error('更新用户信息失败:', error)
+      }
+    }
+
+    updateUserFromUrlParams()
   }, [])
 
   // 获取页面信息和自动发送消息
