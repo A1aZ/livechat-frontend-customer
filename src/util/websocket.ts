@@ -351,12 +351,14 @@ class TaroWebSocketManager implements WebSocketManager {
 
   // 获取连接状态信息
   getConnectionInfo() {
+    const readyState = this.getReadyState();
     return {
       connected: this.isConnected(),
       reconnectAttempts: this.reconnectAttempts,
       backgroundKeepAlive: this.backgroundKeepAlive,
       isReconnecting: this.isReconnecting,
-      isConnecting: this.task !== null && this.getReadyState() === 0 // CONNECTING状态
+      isConnecting: this.task !== null && readyState === 0, // CONNECTING状态
+      hasStartedConnecting: this.task !== null // 连接过程是否已经开始
     };
   }
 }

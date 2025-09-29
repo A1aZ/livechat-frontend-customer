@@ -13,7 +13,8 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ className }) => {
     reconnectAttempts: 0,
     backgroundKeepAlive: true,
     isReconnecting: false,
-    isConnecting: false // 新增：正在连接状态
+    isConnecting: false, // 新增：正在连接状态
+    hasStartedConnecting: false // 新增：连接过程是否已经开始
   });
 
   const wsManager = React.useMemo(() => getWebSocketManager(), []);
@@ -37,17 +38,17 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ className }) => {
     if (connectionInfo.isReconnecting) {
       return `重连中(${connectionInfo.reconnectAttempts})`;
     }
-    if (connectionInfo.isConnecting) {
+    if (connectionInfo.isConnecting || (!connectionInfo.connected && connectionInfo.hasStartedConnecting)) {
       return '连接中...';
     }
-    return connectionInfo.connected ? '已连接' : '已断开';
+    return connectionInfo.connected ? '已连接' : '待连接';
   };
 
   const getStatusColor = () => {
     if (connectionInfo.isReconnecting) {
       return '#faad14'; // 橙色
     }
-    if (connectionInfo.isConnecting) {
+    if (connectionInfo.isConnecting || (!connectionInfo.connected && connectionInfo.hasStartedConnecting)) {
       return '#1890ff'; // 蓝色
     }
     return connectionInfo.connected ? '#52c41a' : '#ff4d4f'; // 绿色或红色
@@ -57,7 +58,8 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ className }) => {
   const shouldShow = process.env.NODE_ENV === 'development' ||
                     !connectionInfo.connected ||
                     connectionInfo.isReconnecting ||
-                    connectionInfo.isConnecting;
+                    connectionInfo.isConnecting ||
+                    (!connectionInfo.connected && connectionInfo.hasStartedConnecting);
 
   if (!shouldShow) {
     return null;
