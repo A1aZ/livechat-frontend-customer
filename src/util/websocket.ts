@@ -17,6 +17,7 @@ export interface WebSocketManager {
   onError: (callback: (error: any) => void) => void;
   onOpen: (callback: () => void) => void;
   onClose: (callback: (code: number) => void) => void;
+  forceReconnect: () => Promise<void>;
   isConnected: () => boolean;
   getReadyState: () => number;
 }
@@ -39,8 +40,13 @@ class TaroWebSocketManager implements WebSocketManager {
   private closeCallback?: (code: number) => void;
 
   constructor() {
-    this.url = `${WS_URL}?token=${getToken()}`;
+    this.updateUrl(); // 动态更新URL
     this.setupPageLifecycle();
+  }
+
+  private updateUrl() {
+    const currentToken = getToken();
+    this.url = `${WS_URL}?token=${currentToken}`;
   }
 
   private setupPageLifecycle() {
@@ -106,8 +112,8 @@ class TaroWebSocketManager implements WebSocketManager {
       clearInterval(this.heartbeatInterval);
     }
 
-    // 后台时延长心跳间隔
-    const interval = isBackground ? 60000 : 30000; // 后台60秒，前台30秒
+    // 后台时延长心跳间隔，前台使用配置的心跳间隔
+    const interval = isBackground ? this.heartbeatTimer * 2 : this.heartbeatTimer; // 后台间隔翻倍
 
     this.heartbeatInterval = setInterval(() => {
       if (this.isConnected()) {
@@ -134,6 +140,13 @@ class TaroWebSocketManager implements WebSocketManager {
   }
 
   private handleConnectionError() {
+    // 检查token是否存在，如果不存在说明用户未登录，不应该重连
+    const currentToken = getToken();
+    if (!currentToken) {
+      console.log('没有有效token，停止WebSocket重连');
+      return;
+    }
+
     if (!this.isReconnecting) {
       this.attemptReconnect();
     }
@@ -173,8 +186,11 @@ class TaroWebSocketManager implements WebSocketManager {
       return;
     }
 
+    // 连接前更新URL，确保使用最新的token
+    this.updateUrl();
+
     return new Promise((resolve, reject) => {
-      console.log('建立WebSocket连接...');
+      console.log('建立WebSocket连接...', this.url);
 
       Taro.connectSocket({
         url: this.url
@@ -208,6 +224,7 @@ class TaroWebSocketManager implements WebSocketManager {
           }
 
           reject(error);
+          // 检查是否是认证错误，如果是则不要立即重连
           this.handleConnectionError();
         });
 
@@ -323,6 +340,13 @@ class TaroWebSocketManager implements WebSocketManager {
   setBackgroundKeepAlive(enabled: boolean) {
     this.backgroundKeepAlive = enabled;
     console.log(`后台保活${enabled ? '已启用' : '已禁用'}`);
+  }
+
+  // 强制重新连接（当token更新时）
+  async forceReconnect() {
+    console.log('强制重新连接WebSocket');
+    this.disconnect();
+    await this.connect();
   }
 
   // 获取连接状态信息

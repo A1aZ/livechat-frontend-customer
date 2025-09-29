@@ -336,8 +336,12 @@ const Index = () => {
       setIsConnectedToAgent(status.is_connected_to_agent)
       setAiBlocked(status.ai_blocked)
       setWaitingCount(status.waiting_count)
-    }).catch(() => {
-      // 如果获取状态失败，使用默认状态
+    }).catch((error) => {
+      // 如果获取状态失败，检查是否是认证问题
+      if (error.statusCode === 401) {
+        console.log('认证失败，将跳转到登录页面')
+        return
+      }
     })
 
     // 然后获取消息
@@ -347,7 +351,12 @@ const Index = () => {
       }
       setMessages(res.data)
       connect()
-    }).catch(() => {
+    }).catch((error) => {
+      // 如果获取消息失败，检查是否是认证问题
+      if (error.statusCode === 401) {
+        console.log('认证失败，将跳转到登录页面')
+        return
+      }
     })
   }, [connect])
 
