@@ -1,7 +1,7 @@
 import React from 'react'
 import {Button, View} from "@tarojs/components";
 import Taro from "@tarojs/taro"
-import {setToken} from "@/util/auth";
+import {setToken, getToken} from "@/util/auth";
 import {handleAnonymousLogin} from "@/api";
 import { Image } from "@tarojs/components";
 import logoImage from '@/asset/img/logo.png'
@@ -11,14 +11,42 @@ const Index = () => {
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState(false)
 
-  const anonymousLogin = React.useCallback(() => {
+  // 检查是否已登录，如果已登录则跳转到聊天页面
+  const checkLoginStatus = React.useCallback(() => {
+    const token = getToken()
+
+    // 获取URL参数
+    const instance = Taro.getCurrentInstance()
+    const params = instance.router?.params || {}
+    const { username, user_id } = params
+    const hasUrlParams = username || user_id
+
+    if (token) {
+      if (hasUrlParams) {
+        // 如果有token且URL中有参数，执行更新用户信息
+        console.log('发现现有token和URL参数，执行用户信息更新')
+        anonymousLogin({ username, user_id })
+        return true
+      } else {
+        // 如果有token但没有URL参数，直接跳转到聊天页面
+        console.log('发现现有token，直接跳转到聊天页面')
+        Taro.navigateTo({
+          url: '/pages/index/index'
+        })
+        return true
+      }
+    }
+    return false
+  }, [anonymousLogin])
+
+  const anonymousLogin = React.useCallback((providedParams?: {username?: string, user_id?: string}) => {
     setLoading(true)
     setError(false)
 
     // 获取URL参数
     const instance = Taro.getCurrentInstance()
     const params = instance.router?.params || {}
-    const { username, user_id } = params
+    const { username, user_id } = providedParams || params
 
     console.log('检测到URL参数:', { username, user_id })
 
@@ -53,10 +81,14 @@ const Index = () => {
     })
   }, [])
 
-  // 组件挂载时自动执行匿名登录
+  // 组件挂载时检查登录状态
   React.useEffect(() => {
-    anonymousLogin()
-  }, [anonymousLogin])
+    // 先检查是否已登录
+    if (!checkLoginStatus()) {
+      // 如果没有登录，则执行匿名登录
+      anonymousLogin()
+    }
+  }, [checkLoginStatus, anonymousLogin])
 
   return (
     <View className='pt-36'>
