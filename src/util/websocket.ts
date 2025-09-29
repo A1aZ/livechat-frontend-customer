@@ -355,7 +355,8 @@ class TaroWebSocketManager implements WebSocketManager {
       connected: this.isConnected(),
       reconnectAttempts: this.reconnectAttempts,
       backgroundKeepAlive: this.backgroundKeepAlive,
-      isReconnecting: this.isReconnecting
+      isReconnecting: this.isReconnecting,
+      isConnecting: this.task !== null && this.getReadyState() === 0 // CONNECTING状态
     };
   }
 }

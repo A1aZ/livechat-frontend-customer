@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text } from '@tarojs/components';
-import Taro from '@tarojs/taro';
 import getWebSocketManager from '@/util/websocket';
 import classNames from 'classnames';
 
@@ -13,7 +12,8 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ className }) => {
     connected: false,
     reconnectAttempts: 0,
     backgroundKeepAlive: true,
-    isReconnecting: false
+    isReconnecting: false,
+    isConnecting: false // 新增：正在连接状态
   });
 
   const wsManager = React.useMemo(() => getWebSocketManager(), []);
@@ -37,6 +37,9 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ className }) => {
     if (connectionInfo.isReconnecting) {
       return `重连中(${connectionInfo.reconnectAttempts})`;
     }
+    if (connectionInfo.isConnecting) {
+      return '连接中...';
+    }
     return connectionInfo.connected ? '已连接' : '已断开';
   };
 
@@ -44,13 +47,17 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ className }) => {
     if (connectionInfo.isReconnecting) {
       return '#faad14'; // 橙色
     }
+    if (connectionInfo.isConnecting) {
+      return '#1890ff'; // 蓝色
+    }
     return connectionInfo.connected ? '#52c41a' : '#ff4d4f'; // 绿色或红色
   };
 
-  // 只在开发环境或连接异常时显示
+  // 只在开发环境、连接异常或正在连接时显示
   const shouldShow = process.env.NODE_ENV === 'development' ||
                     !connectionInfo.connected ||
-                    connectionInfo.isReconnecting;
+                    connectionInfo.isReconnecting ||
+                    connectionInfo.isConnecting;
 
   if (!shouldShow) {
     return null;
