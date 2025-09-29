@@ -66,9 +66,20 @@ const Index = () => {
   React.useEffect(() => {
     const updateUserFromUrlParams = async () => {
       try {
-        const instance = Taro.getCurrentInstance()
-        const params = instance.router?.params || {}
-        const { username, user_id } = params
+        let username, user_id
+
+        if (isH5()) {
+          // H5环境中从URL查询参数获取
+          const urlParams = new URLSearchParams(window.location.search)
+          username = urlParams.get('username')
+          user_id = urlParams.get('user_id')
+        } else if (isWeapp()) {
+          // 小程序环境中从路由参数获取
+          const instance = Taro.getCurrentInstance()
+          const params = instance.router?.params || {}
+          username = params.username
+          user_id = params.user_id
+        }
 
         // 如果URL中有username或user_id参数，调用API更新用户信息
         if (username || user_id) {
