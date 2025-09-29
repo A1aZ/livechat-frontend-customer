@@ -15,7 +15,19 @@ const Index = () => {
     setLoading(true)
     setError(false)
 
-    handleAnonymousLogin().then(res => {
+    // 获取URL参数
+    const instance = Taro.getCurrentInstance()
+    const params = instance.router?.params || {}
+    const { username, user_id } = params
+
+    console.log('检测到URL参数:', { username, user_id })
+
+    // 构建登录参数
+    const loginData: {username?: string, user_id?: string} = {}
+    if (username) loginData.username = username
+    if (user_id) loginData.user_id = user_id
+
+    handleAnonymousLogin(loginData).then(res => {
       console.log('用户名:', res.data.username);
       console.log('JWT令牌:', res.data.token);
 
