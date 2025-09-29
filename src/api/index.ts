@@ -15,7 +15,8 @@ export const handleAnonymousLogin = (data?: {username?: string, user_id?: string
     data: data || {},
     header: {
       'Content-Type': 'application/json'
-    }
+    },
+    isLoginRequest: true
   })
 }
 export const getReqId = () => {

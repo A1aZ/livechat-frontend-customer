@@ -110,7 +110,7 @@ const Index = () => {
             <View className={"text-red-500 mb-4"}>连接失败</View>
             <Button
               className={"bg-blue-500 text-white px-6 py-2 rounded"}
-              onClick={anonymousLogin}
+              onClick={() => anonymousLogin()}
             >
               重试连接
             </Button>

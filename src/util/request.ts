@@ -1,7 +1,7 @@
 import Taro from '@tarojs/taro'
 import { getToken, removeToken } from "./auth"
 
-function request<T = any>(options: Taro.request.Option) : Promise<APP.Resp<T>> {
+function request<T = any>(options: Taro.request.Option & { isLoginRequest?: boolean }) : Promise<APP.Resp<T>> {
   if (options.header === undefined) {
     options.header = {}
   }
@@ -23,9 +23,12 @@ function request<T = any>(options: Taro.request.Option) : Promise<APP.Resp<T>> {
       }
       case 401: {
         removeToken()
-        Taro.reLaunch({
-          url: '/pages/login/index'
-        })
+        // 如果不是登录请求，才跳转到登录页面，避免死循环
+        if (!options.isLoginRequest) {
+          Taro.reLaunch({
+            url: '/pages/login/index'
+          })
+        }
         return Promise.reject(res)
       }
       case 404: {
