@@ -131,7 +131,7 @@ const Index = ({setMessages, setNoMore, connectService}) => {
           disabled={isSending || (action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent)}
           placeholder={
             action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent
-              ? "AI正在回复中，请稍等..."
+              ? "正在回复中，请稍等..."
               : "请输入消息..."
           }
           className={classNames("bg-white p-2 rounded transition-all", {
@@ -147,7 +147,7 @@ const Index = ({setMessages, setNoMore, connectService}) => {
           }}
         />
       </View>
-      
+
       {/* 右侧功能区 */}
       <View className={"flex items-center"}>
         {/* 人工 */}
@@ -178,22 +178,11 @@ const Index = ({setMessages, setNoMore, connectService}) => {
             }
           }}
         />
-        
-        {/* {isSending && (
-          <View className="mt-1 text-xs text-gray-500">
-            发送中...
-          </View>
-        )} */}
-        {/* {action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent && (
-          <View className="mt-1 text-xs text-orange-500">
-            AI思考中
-          </View>
-        )} */}
       </View>
-      
+
       {/* 点击空白处关闭面板 */}
       {showPanel && (
-        <View 
+        <View
           className="fixed inset-0 z-9"
           onClick={() => setShowPanel(false)}
         />
@@ -202,14 +191,14 @@ const Index = ({setMessages, setNoMore, connectService}) => {
 
       {/* 折叠面板 */}
       {showPanel && (
-        <View 
+        <View
           className="position-relative z-10 bottom-full left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-2 flex justify-around items-center"
           onClick={(e) => {
             e.stopPropagation()
           }}
         >
           {/* 图片上传 */}
-          <View 
+          <View
             className="flex flex-col items-center p-2 rounded-lg active:bg-gray-100"
             onClick={() => {
               if (!isSending && !(action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent)) {
@@ -227,9 +216,9 @@ const Index = ({setMessages, setNoMore, connectService}) => {
             />
             <View className="text-xs text-gray-600 mt-1">图片</View>
           </View>
-          
+
           {/* 清除记录 */}
-          <View 
+          <View
             className="flex flex-col items-center p-2 rounded-lg active:bg-gray-100"
             onClick={() => {
               if (!isSending && !(action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent)) {
@@ -247,9 +236,9 @@ const Index = ({setMessages, setNoMore, connectService}) => {
             />
             <View className="text-xs text-gray-600 mt-1">清除记录</View>
           </View>
-          
+
           {/* 人工客服 */}
-          {/* <View 
+          {/* <View
             className="flex flex-col items-center p-2 rounded-lg active:bg-gray-100"
             onClick={() => {
               if (!isSending && !(action.ai_block_user_messages && action.aiBlocked && !action.isWaitingForAgent && !action.isConnectedToAgent)) {
@@ -258,7 +247,7 @@ const Index = ({setMessages, setNoMore, connectService}) => {
               }
             }}
           >
-            
+
             <Image
               src={serviceImg}
               className={classNames("w-8 h-auto", {
@@ -270,7 +259,7 @@ const Index = ({setMessages, setNoMore, connectService}) => {
           </View> */}
         </View>
       )}
-      
+
     </View>
   )
 }

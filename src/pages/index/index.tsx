@@ -212,13 +212,13 @@ const Index = () => {
   const getStatusText = React.useCallback(() => {
     switch (serviceStatus) {
       case 'ai-serving':
-        return aiBlocked ? 'AI思考中...' : 'AI接待中'
+        return aiBlocked ? '正在回复，请稍等...' : '智能客服接待中'
       case 'transferring-to-manual':
         return `转接人工中... 前面还有${waitingCount}人`
       case 'manual-serving':
         return '人工接待中'
       default:
-        return 'AI接待中'
+        return '智能客服接待中'
     }
   }, [serviceStatus, aiBlocked])
 
@@ -435,7 +435,7 @@ const Index = () => {
         if (error.message && error.message.includes('AI正在回复中')) {
           setAiBlocked(true)
           Taro.showToast({
-            title: 'AI正在思考中，请稍等...',
+            title: '正在回复，请稍等...',
             icon: 'none',
             duration: 2000
           })
