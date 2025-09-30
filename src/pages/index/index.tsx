@@ -212,13 +212,13 @@ const Index = () => {
   const getStatusText = React.useCallback(() => {
     switch (serviceStatus) {
       case 'ai-serving':
-        return aiBlocked ? '正在回复，请稍等...' : '智能客服接待中'
+        return aiBlocked ? '正在回复，请稍等...' : '智能客服接待中，内容由 AI 生成，无法保证真实准确，仅供参考'
       case 'transferring-to-manual':
         return `转接人工中... 前面还有${waitingCount}人`
       case 'manual-serving':
         return '人工接待中'
       default:
-        return '智能客服接待中'
+        return ''
     }
   }, [serviceStatus, aiBlocked])
 
