@@ -3,7 +3,7 @@ import { defineConfig, type UserConfigExport } from '@tarojs/cli'
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin'
 import devConfig from './dev'
 import prodConfig from './prod'
-import preConfig from './pre'
+import testConfig from './test'
 // const isH5 = process.env.TARO_ENV === "h5";
 // const isApp = process.env.TARO_ENV === "rn";
 // const WeappTailwindcssDisabled = isH5 || isApp;
@@ -139,6 +139,10 @@ export default defineConfig(async (merge) => {
   if (process.env.NODE_ENV === 'development') {
     // 本地开发构建配置（不混淆压缩）
     return merge({}, baseConfig, devConfig)
+  }
+  if (process.env.NODE_ENV === 'test') {
+    // 测试构建配置
+    return merge({}, baseConfig, testConfig)
   }
   // 生产构建配置（默认开启压缩混淆等）
   return merge({}, baseConfig, prodConfig)
