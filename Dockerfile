@@ -1,14 +1,18 @@
 # 多阶段构建：第一阶段用于构建项目
 FROM image-artifact-registry-vpc.cn-hangzhou.cr.aliyuncs.com/library/node:22-alpine AS builder
 
+# 设置时区
+ENV TZ=Asia/Shanghai
+
+# 设置镜像源加速
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+
 # 设置工作目录
 WORKDIR /app
 
 # 安装构建依赖（用于编译原生模块）
 RUN apk add --no-cache python3 make g++
 
-# 设置构建环境变量，支持 dev/test/prod，默认为生产环境
-ARG BUILD_ENV=prod
 ENV NODE_ENV=$BUILD_ENV
 
 # 复制 package.json 和 yarn.lock
