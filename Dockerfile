@@ -4,6 +4,9 @@ FROM image-artifact-registry-vpc.cn-hangzhou.cr.aliyuncs.com/library/node:22-alp
 # 设置工作目录
 WORKDIR /app
 
+# 安装构建依赖（用于编译原生模块）
+RUN apk add --no-cache python3 make g++
+
 # 设置构建环境变量，支持 dev/test/prod，默认为生产环境
 ARG BUILD_ENV=prod
 ENV NODE_ENV=$BUILD_ENV
@@ -16,6 +19,9 @@ RUN yarn install --frozen-lockfile
 
 # 复制源代码
 COPY . .
+
+# 重新构建原生依赖以匹配容器平台
+RUN yarn install --force
 
 # 构建项目
 RUN npm run build:h5
