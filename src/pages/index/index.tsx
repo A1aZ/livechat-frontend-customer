@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react'
 import Taro from '@tarojs/taro'
-import {View} from '@tarojs/components'
-import {getMessages, getSetting, handleRead, transferToManual, getReqId, getStatus, handleAnonymousLogin} from "@/api";
-import {isH5, isWeapp} from "@/util/env";
-import {MessageSource} from "@/util/index"
+import { View } from '@tarojs/components'
+import { getMessages, getSetting, handleRead, transferToManual, getReqId, getStatus, handleAnonymousLogin } from "@/api";
+import { isH5, isWeapp } from "@/util/env";
+import { MessageSource } from "@/util/index"
 import getWebSocketManager, { WebSocketMessage } from '@/util/websocket'
 
 import SendContext from './context'
@@ -84,7 +84,7 @@ const Index = () => {
         // 如果URL中有username或user_id参数，调用API更新用户信息
         if (username || user_id) {
           console.log('检测到URL参数，更新用户信息:', { username, user_id })
-          const loginData: {username?: string, user_id?: string} = {}
+          const loginData: { username?: string, user_id?: string } = {}
           if (username) loginData.username = username
           if (user_id) loginData.user_id = user_id
 
@@ -150,52 +150,52 @@ const Index = () => {
             message += `\n链接：未知链接`
           }
 
-            // 添加自定义参数
-            const customParams = JSON.parse(decodeURIComponent(params.msgData || '{}'))
-            console.log('customParams', customParams)
-            if(Object.keys(customParams).length>0) {
-              message += '\n参数：'
-            }
-            Object.keys(customParams).forEach(key => {
-              message += `\n${key}=${customParams[key]}`
-            })
+          // 添加自定义参数
+          const customParams = JSON.parse(decodeURIComponent(params.msgData || '{}'))
+          console.log('customParams', customParams)
+          if (Object.keys(customParams).length > 0) {
+            message += '\n参数：'
+          }
+          Object.keys(customParams).forEach(key => {
+            message += `\n${key}=${customParams[key]}`
+          })
 
-            console.log('message', message)
+          console.log('message', message)
 
           // 等待WebSocket连接建立后发送消息
           const sendMessageAfterConnect = () => {
-              if (wsManager.isConnected()) {
-                // 获取req_id
-                getReqId().then(async res => {
-                  const action = {
-                    data: {
-                      admin_id: 0,
-                      content: message,
-                      type: 'page-info' as const,
-                      req_id: res.data.req_id,
-                      source: 0,
-                      avatar: '',
-                      received_at: Math.floor(Date.now() / 1000),
-                      success: undefined,
-                    },
-                    time: Math.floor(Date.now() / 1000),
-                    action: 'send-message',
-                  }
-                  // 对于自动发送的消息，直接通过WebSocket发送，不添加到本地消息列表
-                  try {
-                    await wsManager.send(action)
-                    setHasSentPageInfo(true)
-                  } catch (error) {
-                    console.error('自动发送页面信息失败:', error)
-                  }
-                }).catch(error => {
-                  console.error('获取req_id失败:', error)
-                })
-              } else {
-                // 如果连接还没建立，稍后再试
-                setTimeout(sendMessageAfterConnect, 500)
-              }
+            if (wsManager.isConnected()) {
+              // 获取req_id
+              getReqId().then(async res => {
+                const action = {
+                  data: {
+                    admin_id: 0,
+                    content: message,
+                    type: 'page-info' as const,
+                    req_id: res.data.req_id,
+                    source: 0,
+                    avatar: '',
+                    received_at: Math.floor(Date.now() / 1000),
+                    success: undefined,
+                  },
+                  time: Math.floor(Date.now() / 1000),
+                  action: 'send-message',
+                }
+                // 对于自动发送的消息，直接通过WebSocket发送，不添加到本地消息列表
+                try {
+                  await wsManager.send(action)
+                  setHasSentPageInfo(true)
+                } catch (error) {
+                  console.error('自动发送页面信息失败:', error)
+                }
+              }).catch(error => {
+                console.error('获取req_id失败:', error)
+              })
+            } else {
+              // 如果连接还没建立，稍后再试
+              setTimeout(sendMessageAfterConnect, 500)
             }
+          }
 
           // 延迟执行，确保组件已完全初始化
           setTimeout(sendMessageAfterConnect, 2000)
@@ -243,7 +243,7 @@ const Index = () => {
         data: user
       })
     }
-  } catch(e) {
+  } catch (e) {
     console.log('postMessage user error', e)
   }
   // })
@@ -522,7 +522,7 @@ const Index = () => {
       content: '确定要转接人工客服吗？',
       success: (res) => {
         if (res.confirm) {
-          handleTransferToManual().catch(() => {})
+          handleTransferToManual().catch(() => { })
         }
       }
     })
@@ -570,13 +570,13 @@ const Index = () => {
   // 注意：safeAreaStyle相关代码已被注释，如需要可以重新启用
 
   const recent = useMemo(() => {
-      return (
-        <View className="flex h-full justify-center items-center mt-2">
-            <View className="text-sm text-gray-500">
-              {getStatusText()}
-            </View>
+    return (
+      <View className="flex h-full justify-center items-center mt-2">
+        <View className="text-sm text-gray-500">
+          {getStatusText()}
         </View>
-      )
+      </View>
+    )
   }, [serviceStatus, aiBlocked])
 
   return (

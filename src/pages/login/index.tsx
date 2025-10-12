@@ -1,8 +1,8 @@
 import React from 'react'
-import {Button, View} from "@tarojs/components";
+import { Button, View } from "@tarojs/components";
 import Taro from "@tarojs/taro"
-import {setToken, getToken, removeToken} from "@/util/auth";
-import {handleAnonymousLogin} from "@/api";
+import { setToken, getToken } from "@/util/auth";
+import { handleAnonymousLogin } from "@/api";
 import { Image } from "@tarojs/components";
 import logoImage from '@/asset/img/logo.png'
 
@@ -13,7 +13,7 @@ const Index = () => {
   const [isInitialized, setIsInitialized] = React.useState(false)
   const [isLoggingIn, setIsLoggingIn] = React.useState(false)
 
-  const anonymousLogin = React.useCallback((providedParams?: {username?: string, user_id?: string}) => {
+  const anonymousLogin = React.useCallback((providedParams?: { username?: string, user_id?: string, customer_id?: number }) => {
     // 防止重复调用
     if (isLoggingIn) {
       console.log('正在登录中，跳过重复调用')
@@ -27,12 +27,14 @@ const Index = () => {
     // 获取URL参数
     const instance = Taro.getCurrentInstance()
     const params = instance.router?.params || {}
-    const { username, user_id } = providedParams || params
+    const { username, user_id, customer_id } = providedParams || params
 
-    console.log('检测到URL参数:', { username, user_id })
+    console.log('检测到URL参数:', { username, user_id, customer_id })
 
-    // 构建登录参数
-    const loginData: {username?: string, user_id?: string} = {}
+    // 构建登录参数，customer_id 默认为 1
+    const loginData: { username?: string, user_id?: string, customer_id: number } = {
+      customer_id: customer_id ? Number(customer_id) : 1
+    }
     if (username) loginData.username = username
     if (user_id) loginData.user_id = user_id
 
@@ -74,14 +76,14 @@ const Index = () => {
     // 获取URL参数
     const instance = Taro.getCurrentInstance()
     const params = instance.router?.params || {}
-    const { username, user_id } = params
-    const hasUrlParams = username || user_id
+    const { username, user_id, customer_id } = params
+    const hasUrlParams = username || user_id || customer_id
 
     if (token) {
       if (hasUrlParams) {
         // 如果有token且URL中有参数，执行更新用户信息
         console.log('发现现有token和URL参数，执行用户信息更新')
-        anonymousLogin({ username, user_id })
+        anonymousLogin({ username, user_id, customer_id: customer_id ? Number(customer_id) : undefined })
       } else {
         // 如果有token但没有URL参数，直接跳转到聊天页面
         console.log('发现现有token，直接跳转到聊天页面')

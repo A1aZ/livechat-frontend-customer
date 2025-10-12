@@ -1,7 +1,8 @@
 import Taro from '@tarojs/taro'
 import { getToken, removeToken } from "./auth"
+import { isH5 } from "./env"
 
-function request<T = any>(options: Taro.request.Option & { isLoginRequest?: boolean }) : Promise<APP.Resp<T>> {
+function request<T = any>(options: Taro.request.Option & { isLoginRequest?: boolean }): Promise<APP.Resp<T>> {
   if (options.header === undefined) {
     options.header = {}
   }
@@ -25,8 +26,42 @@ function request<T = any>(options: Taro.request.Option & { isLoginRequest?: bool
         removeToken()
         // 如果不是登录请求，才跳转到登录页面，避免死循环
         if (!options.isLoginRequest) {
+          // 获取当前页面的参数，并传递给登录页
+          let username, user_id, customer_id
+
+          try {
+            if (isH5()) {
+              // H5环境从URL参数获取
+              const urlParams = new URLSearchParams(window.location.search)
+              username = urlParams.get('username')
+              user_id = urlParams.get('user_id')
+              customer_id = urlParams.get('customer_id') || urlParams.get('custom_id')
+            } else {
+              // 小程序环境从路由参数获取
+              const instance = Taro.getCurrentInstance()
+              const params = instance.router?.params || {}
+              username = params.username
+              user_id = params.user_id
+              customer_id = params.customer_id || params.custom_id
+            }
+          } catch (error) {
+            console.error('获取URL参数失败:', error)
+          }
+
+          // 构建登录页URL参数
+          const loginParams: string[] = []
+          if (username) loginParams.push(`username=${encodeURIComponent(username)}`)
+          if (user_id) loginParams.push(`user_id=${encodeURIComponent(user_id)}`)
+          if (customer_id) loginParams.push(`customer_id=${encodeURIComponent(customer_id)}`)
+
+          const loginUrl = loginParams.length > 0
+            ? `/pages/login/index?${loginParams.join('&')}`
+            : '/pages/login/index'
+
+          console.log('认证失败，将跳转到登录页面，参数:', { username, user_id, customer_id })
+
           Taro.reLaunch({
-            url: '/pages/login/index'
+            url: loginUrl
           })
         }
         return Promise.reject(res)
@@ -40,7 +75,7 @@ function request<T = any>(options: Taro.request.Option & { isLoginRequest?: bool
         return Promise.reject(res)
       }
       case 422: {
-        const {data} = res
+        const { data } = res
         if (data.message) {
           Taro.showToast({
             icon: "none",

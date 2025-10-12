@@ -1,15 +1,15 @@
 import request from "../util/request";
 
 export const handleLogin = (data) => {
-  return request<{token: string}>({
+  return request<{ token: string }>({
     url: '/login',
     method: 'POST',
     data
   })
 }
 
-export const handleAnonymousLogin = (data?: {username?: string, user_id?: string}) => {
-  return request<{username: string, token: string}>({
+export const handleAnonymousLogin = (data?: { username?: string, user_id?: string, customer_id?: number }) => {
+  return request<{ username: string, token: string }>({
     url: '/anonymous-login',
     method: 'POST',
     data: data || {},
@@ -20,13 +20,13 @@ export const handleAnonymousLogin = (data?: {username?: string, user_id?: string
   })
 }
 export const getReqId = () => {
-  return request<{req_id: string}>({
+  return request<{ req_id: string }>({
     url: "/chat/req-id",
     method: "GET"
   })
 }
 
-export const getMessages = ( size = 20, id?: number) => {
+export const getMessages = (size = 20, id?: number) => {
   const data = {
     pageSize: size,
   }
@@ -40,7 +40,7 @@ export const getMessages = ( size = 20, id?: number) => {
 }
 
 
-export const getSetting = ( ) => {
+export const getSetting = () => {
   return request<APP.ChatSetting>({
     url: '/chat/setting',
   })
@@ -49,7 +49,7 @@ export const getSetting = ( ) => {
 export const handleRead = (msgId: number) => {
   return request({
     url: '/chat/read',
-    method:"POST",
+    method: "POST",
     data: {
       msg_id: msgId,
     }

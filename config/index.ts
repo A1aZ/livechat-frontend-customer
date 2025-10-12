@@ -89,12 +89,14 @@ export default defineConfig(async (merge) => {
       staticDirectory: 'static',
       // 开发服务器配置
       devServer: {
-        port: 8080,
+        // 根据本地起来的实际端口进行调整
+        port: 8081,
         host: 'localhost',
         allowedHosts: ['localhost'],
         proxy: {
           '/api': {
-            target: 'https://chat-t.zmyyc.com', // 后端地址
+            // target: 'https://chat-t.zmyyc.com', // 后端地址
+            target: 'http://localhost:8082', // 本地后端地址（docker-compose 开发环境）
             changeOrigin: true,             // 支持虚拟主机
             ws: true,
             secure: false,                  // 关闭证书校验

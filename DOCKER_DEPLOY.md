@@ -64,7 +64,7 @@ docker run -d -p 3000:80 --name livechat-customer livechat-frontend-customer
 
 - **开发环境 (dev)**: 使用本地开发服务器
   - API: `/api/user`
-  - WebSocket: `ws://localhost:8080/api/user/chat/ws`
+  - WebSocket: `ws://localhost:8082/api/user/chat/ws`
 
 - **测试环境 (test)**: 使用测试服务器
   - API: `https://test-chat.zmyyc.com/api/user`
