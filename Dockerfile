@@ -13,7 +13,9 @@ WORKDIR /app
 # 安装构建依赖（用于编译原生模块）
 RUN apk add --no-cache python3 make g++
 
-ENV NODE_ENV=$BUILD_ENV
+# 设置构建环境变量（匹配 GitHub Actions 工作流）
+ENV BUILD_MODE=$BUILD_MODE
+ENV NODE_ENV=$NODE_ENV
 
 # 复制 package.json 和 yarn.lock
 COPY package*.json yarn.lock ./
@@ -24,11 +26,31 @@ RUN yarn install --frozen-lockfile
 # 复制源代码
 COPY . .
 
-# 重新构建原生依赖以匹配容器平台
-RUN yarn install --force
+# 构建项目（匹配 GitHub Actions 工作流中的构建命令）
+RUN yarn build:h5 --mode ${BUILD_MODE}
 
-# 构建项目
-RUN npm run build:h5
+# 验证构建产物（匹配 GitHub Actions 工作流中的验证步骤）
+RUN echo "🔍 验证构建产物..." && \
+    if [ -f "dist/index.html" ]; then \
+        echo "✅ index.html 存在"; \
+    else \
+        echo "❌ index.html 不存在" && exit 1; \
+    fi && \
+    if [ -d "dist/js" ] && [ "$(ls -A dist/js/*.js 2>/dev/null | wc -l)" -gt 0 ]; then \
+        echo "✅ JS文件存在" && \
+        echo "📊 JS文件数量: $(ls -A dist/js/*.js 2>/dev/null | wc -l)"; \
+    else \
+        echo "❌ JS文件不存在" && exit 1; \
+    fi && \
+    if [ -d "dist/css" ] && [ "$(ls -A dist/css/*.css 2>/dev/null | wc -l)" -gt 0 ]; then \
+        echo "✅ CSS文件存在" && \
+        echo "📊 CSS文件数量: $(ls -A dist/css/*.css 2>/dev/null | wc -l)"; \
+    else \
+        echo "❌ CSS文件不存在" && exit 1; \
+    fi && \
+    echo "📏 构建产物大小统计:" && \
+    du -sh dist/* && \
+    echo "✅ 构建验证通过"
 
 # 第二阶段：使用 nginx 服务静态文件
 FROM image-artifact-registry-vpc.cn-hangzhou.cr.aliyuncs.com/library/nginx:stable
