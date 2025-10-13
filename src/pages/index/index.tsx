@@ -463,7 +463,8 @@ const Index = () => {
   React.useEffect(() => {
     if (isH5()) {
       window.onresize = () => {
-        window.location.reload()
+        // window.location.reload()
+        console.log('window resized')
       }
     }
   }, [])
@@ -552,11 +553,26 @@ const Index = () => {
     }
   }, [loading, messages, noMore])
 
+  const [containerHeight, setContainerHeight] = React.useState(window.innerHeight)
+
+  React.useEffect(() => {
+    if (!isH5()) return
+    
+    const handleResize = () => {
+      console.log('resize refresh height', window.innerHeight)
+      setContainerHeight(window.innerHeight)
+    }
+    
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   // h5模式下，用手机内置的浏览器打开100vh并不是实际的高度
   const cusStyles = React.useMemo(() => {
     if (isH5()) {
+      console.log('set containerHeight', containerHeight)
       return {
-        height: window.innerHeight + "px"
+        height: containerHeight + "px"
       }
     }
     if (isWeapp()) {
@@ -565,14 +581,14 @@ const Index = () => {
       }
     }
     return {}
-  }, [])
+  }, [containerHeight])
 
   // 注意：safeAreaStyle相关代码已被注释，如需要可以重新启用
 
   const recent = useMemo(() => {
     return (
-      <View className="flex h-full justify-center items-center mt-2">
-        <View className="text-sm text-gray-500">
+      <View className="flex h-full justify-center items-center mt-2 pl-8 pr-8">
+        <View className="text-sm text-center text-gray-500">
           {getStatusText()}
         </View>
       </View>
