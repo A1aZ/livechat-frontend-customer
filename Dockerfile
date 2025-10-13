@@ -20,6 +20,9 @@ ENV NODE_ENV=$NODE_ENV
 # 复制 package.json 和 yarn.lock
 COPY package*.json yarn.lock ./
 
+# 配置阿里云镜像站加速依赖安装
+RUN yarn config set registry https://registry.npmmirror.com
+
 # 安装依赖
 RUN yarn install --frozen-lockfile
 
