@@ -1,6 +1,12 @@
 # 多阶段构建：第一阶段用于构建项目
 FROM image-artifact-registry-vpc.cn-hangzhou.cr.aliyuncs.com/library/node:22-alpine AS builder
 
+# 设置构建环境变量
+ARG BUILD_MODE
+ARG NODE_ENV
+ENV BUILD_MODE=${BUILD_MODE}
+ENV NODE_ENV=${NODE_ENV}
+
 # 设置时区
 ENV TZ=Asia/Shanghai
 
@@ -13,26 +19,17 @@ WORKDIR /app
 # 安装构建依赖（用于编译原生模块）
 RUN apk add --no-cache python3 make g++
 
-# 设置构建环境变量（匹配 GitHub Actions 工作流）
-ENV BUILD_MODE=${BUILD_MODE}
-ENV NODE_ENV=${NODE_ENV}
-
 # 复制 package.json 和 yarn.lock
 COPY package*.json yarn.lock ./
 
 # 配置阿里云镜像站加速依赖安装
 RUN yarn config set registry https://registry.npmmirror.com && \
     yarn config set network-timeout 100000 && \
-    yarn config set network-concurrency 8 && \
-    yarn config set cache-folder /tmp/.yarn-cache && \
-    yarn config set prefer-offline false && \
     yarn config list
 
-# 清理缓存并重新安装依赖（如果失败则重试）
+# 清理缓存并重新安装依赖
 RUN yarn cache clean && \
-    (yarn install --frozen-lockfile --network-timeout 100000 || \
-     (echo "首次安装失败，重试中..." && sleep 5 && yarn install --frozen-lockfile --network-timeout 600000) || \
-     (echo "重试失败，使用 npm 安装..." && npm config set registry https://registry.npmmirror.com && npm install --no-package-lock))
+    yarn install --frozen-lockfile
 
 # 复制源代码
 COPY . .
