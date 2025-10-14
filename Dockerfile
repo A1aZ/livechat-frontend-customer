@@ -21,10 +21,18 @@ ENV NODE_ENV=$NODE_ENV
 COPY package*.json yarn.lock ./
 
 # 配置阿里云镜像站加速依赖安装
-RUN yarn config set registry https://registry.npmmirror.com
+RUN yarn config set registry https://registry.npmmirror.com && \
+    yarn config set network-timeout 100000 && \
+    yarn config set network-concurrency 8 && \
+    yarn config set cache-folder /tmp/.yarn-cache && \
+    yarn config set prefer-offline false && \
+    yarn config list
 
-# 安装依赖
-RUN yarn install --frozen-lockfile
+# 清理缓存并重新安装依赖（如果失败则重试）
+RUN yarn cache clean && \
+    (yarn install --frozen-lockfile --network-timeout 100000 || \
+     (echo "首次安装失败，重试中..." && sleep 5 && yarn install --frozen-lockfile --network-timeout 600000) || \
+     (echo "重试失败，使用 npm 安装..." && npm config set registry https://registry.npmmirror.com && npm install --no-package-lock))
 
 # 复制源代码
 COPY . .
