@@ -14,8 +14,8 @@ WORKDIR /app
 RUN apk add --no-cache python3 make g++
 
 # 设置构建环境变量（匹配 GitHub Actions 工作流）
-ENV BUILD_MODE=$BUILD_MODE
-ENV NODE_ENV=$NODE_ENV
+ENV BUILD_MODE=${BUILD_MODE}
+ENV NODE_ENV=${NODE_ENV}
 
 # 复制 package.json 和 yarn.lock
 COPY package*.json yarn.lock ./
