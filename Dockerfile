@@ -1,5 +1,5 @@
 # 多阶段构建：第一阶段用于构建项目
-FROM image-artifact-registry-vpc.cn-hangzhou.cr.aliyuncs.com/library/node:22-alpine AS builder
+FROM image-artifact-registry-vpc.cn-hangzhou.cr.aliyuncs.com/library/node:22-slim AS builder
 
 # 设置构建环境变量
 ARG BUILD_MODE
@@ -11,13 +11,19 @@ ENV NODE_ENV=${NODE_ENV}
 ENV TZ=Asia/Shanghai
 
 # 设置镜像源加速
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
+RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list.d/debian.sources && \
+    apt-get update && apt-get install -y ca-certificates && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # 设置工作目录
 WORKDIR /app
 
 # 安装构建依赖（用于编译原生模块）
-RUN apk add --no-cache python3 make g++
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 # 复制 package.json 和 yarn.lock
 COPY package*.json yarn.lock ./
