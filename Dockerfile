@@ -69,8 +69,8 @@ RUN echo "🔍 验证构建产物..." && \
 # 第二阶段：使用 nginx 服务静态文件
 FROM image-artifact-registry-vpc.cn-hangzhou.cr.aliyuncs.com/library/nginx:stable
 
-# 复制自定义 nginx 配置
-COPY nginx.conf /etc/nginx/nginx.conf
+# 复制自定义 nginx 站点配置
+COPY customer.conf /etc/nginx/conf.d/customer.conf
 
 # 从构建阶段复制构建产物到 nginx 服务目录
 COPY --from=builder /app/dist /usr/share/nginx/html
